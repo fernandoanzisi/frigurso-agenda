@@ -1,4 +1,4 @@
-const CACHE = 'agenda-v2';
+const CACHE = 'agenda-v3';
 const PRECACHE = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e => {

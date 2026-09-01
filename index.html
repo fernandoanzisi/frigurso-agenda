@@ -54,6 +54,12 @@
   .quick-add .input{flex:1}
   .quick-hint{font-size:11px;color:var(--text3);margin:6px 2px 4px}
 
+  .resumen-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .chip-resumen{font-size:11px;font-weight:800;padding:5px 11px;border-radius:99px;background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+  .chip-resumen.aviso{background:rgba(246,106,106,.14);color:var(--red);border-color:rgba(246,106,106,.35)}
+  .chip-resumen.ok{background:rgba(61,220,132,.14);color:var(--green);border-color:rgba(61,220,132,.35)}
+  .dia-subhead{font-size:12px;font-weight:800;color:var(--text2);text-transform:capitalize;margin:12px 4px 6px}
+
   .cumples-strip{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin-bottom:4px}
   .cumple-chip{flex-shrink:0;background:linear-gradient(135deg,rgba(197,139,255,.18),rgba(197,139,255,.05));border:1px solid rgba(197,139,255,.35);border-radius:14px;padding:10px 14px;min-width:110px}
   .cumple-chip .cc-nom{font-size:13px;font-weight:800;color:var(--purple)}
@@ -199,7 +205,8 @@
 <div class="page active" id="page-hoy">
   <div class="header-title">📋 Frigurso Agenda</div>
   <div class="header-sub" id="hoy-sub">—</div>
-  <div style="height:10px"></div>
+  <div class="resumen-chips" id="hoy-resumen"></div>
+  <div style="height:6px"></div>
 
   <div class="quick-add">
     <input type="text" class="input" id="qa-input" placeholder="Ej: mañana 15hs dentista" onkeydown="if(event.key==='Enter')agregarRapido()">
@@ -642,21 +649,36 @@ function ordenarPorHora(lista){
 function renderHoy(){
   const hoy=fechaHoy();
   const manana=sumarDias(hoy,1);
+  const inicioProx=sumarDias(hoy,2);
   const finSemana=sumarDias(hoy,7);
   document.getElementById('hoy-sub').textContent=fmtFechaLarga(hoy);
 
   const vencidos=DB.items.filter(it=>it.tipo==='tarea'&&it.recurrencia==='ninguna'&&it.fecha<hoy&&!it.hecho)
     .map(it=>({item:it,fecha:it.fecha}));
+  ordenarPorHora(vencidos);
 
-  const grupoHoy=[], grupoManana=[], grupoSemana=[];
+  const grupoHoy=[]; DB.items.forEach(it=>ocurrenciasEnRango(it,hoy,hoy).forEach(fecha=>grupoHoy.push({item:it,fecha})));
+  ordenarPorHora(grupoHoy);
+  const grupoManana=[]; DB.items.forEach(it=>ocurrenciasEnRango(it,manana,manana).forEach(fecha=>grupoManana.push({item:it,fecha})));
+  ordenarPorHora(grupoManana);
+
+  // Días siguientes agrupados por fecha real: un ítem que se repite todos
+  // los días aparece una sola vez bajo cada subtítulo de día, no amontonado
+  // en una sola lista sin fecha (eso generaba el título repetido muchas veces).
+  const porFecha={};
   DB.items.forEach(it=>{
-    ocurrenciasEnRango(it,hoy,finSemana).forEach(fecha=>{
-      if(fecha===hoy) grupoHoy.push({item:it,fecha});
-      else if(fecha===manana) grupoManana.push({item:it,fecha});
-      else grupoSemana.push({item:it,fecha});
+    ocurrenciasEnRango(it,inicioProx,finSemana).forEach(fecha=>{
+      (porFecha[fecha]=porFecha[fecha]||[]).push({item:it,fecha});
     });
   });
-  ordenarPorHora(vencidos); ordenarPorHora(grupoHoy); ordenarPorHora(grupoManana); ordenarPorHora(grupoSemana);
+  const fechasProx=Object.keys(porFecha).sort();
+
+  const pendHoy=grupoHoy.filter(x=>!(x.item.tipo==='tarea'&&estaHecho(x.item,x.fecha))).length;
+  let chips='';
+  if(pendHoy) chips+='<span class="chip-resumen">📌 '+pendHoy+' para hoy</span>';
+  else if(!vencidos.length) chips+='<span class="chip-resumen ok">✅ Agenda de hoy al día</span>';
+  if(vencidos.length) chips+='<span class="chip-resumen aviso">⚠️ '+vencidos.length+' atrasada'+(vencidos.length>1?'s':'')+'</span>';
+  document.getElementById('hoy-resumen').innerHTML=chips;
 
   let html='';
   if(vencidos.length){ html+='<div class="section-title">⚠️ Atrasado</div><div class="card" style="padding:2px 10px">'+vencidos.map(x=>itemRowHtml(x.item,x.fecha)).join('')+'</div>'; }
@@ -664,7 +686,15 @@ function renderHoy(){
   html+= grupoHoy.length ? '<div class="card" style="padding:2px 10px">'+grupoHoy.map(x=>itemRowHtml(x.item,x.fecha)).join('')+'</div>' : emptyHtml('☀️','Nada para hoy','Usá el buscador de arriba para agregar algo');
   html+='<div class="section-title">Mañana</div>';
   html+= grupoManana.length ? '<div class="card" style="padding:2px 10px">'+grupoManana.map(x=>itemRowHtml(x.item,x.fecha)).join('')+'</div>' : emptyHtml('🌙','Nada para mañana','');
-  if(grupoSemana.length){ html+='<div class="section-title">Esta semana</div><div class="card" style="padding:2px 10px">'+grupoSemana.map(x=>itemRowHtml(x.item,x.fecha)).join('')+'</div>'; }
+  if(fechasProx.length){
+    html+='<div class="section-title">Próximos días</div>';
+    fechasProx.forEach(fecha=>{
+      const lista=porFecha[fecha];
+      ordenarPorHora(lista);
+      html+='<div class="dia-subhead">'+esc(fmtFechaLarga(fecha))+'</div>'
+        + '<div class="card" style="padding:2px 10px">'+lista.map(x=>itemRowHtml(x.item,x.fecha)).join('')+'</div>';
+    });
+  }
   document.getElementById('hoy-listas').innerHTML=html;
 
   const cumpleItems=DB.items.filter(it=>it.tipo==='cumple');
