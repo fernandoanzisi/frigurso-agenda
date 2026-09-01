@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0a1120">
+<title>Frigurso Agenda</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --bg:#0a1120;--bg2:#0e1830;--bg3:#15213c;--card:#111c33;--border:#1e2c4a;
+    --text:#eef2fa;--text2:#a8b6d4;--text3:#66748f;
+    --accent:#f2a93b;--accent-ink:#241400;--accent2:#ffce6b;--green:#3ddc84;--red:#f66a6a;--purple:#c58bff;
+    --mono:'SF Mono',ui-monospace,Menlo,monospace;
+    --shadow:0 10px 30px -12px rgba(0,0,0,.5);
+    --sab:env(safe-area-inset-bottom,0px);--sat:env(safe-area-inset-top,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overscroll-behavior-y:contain}
+  body{padding-top:var(--sat)}
+  .page{display:none;min-height:100vh;padding:14px 14px calc(80px + var(--sab))}
+  .page.active{display:block}
+  .header{display:flex;align-items:center;width:100%}
+  .header-title{font-size:22px;font-weight:900;letter-spacing:-.01em;margin-bottom:2px}
+  .header-sub{font-size:13px;color:var(--text3)}
+  .section-title{font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:16px 2px 8px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+  .input{width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:15px;font-family:inherit}
+  select.input{appearance:none;-webkit-appearance:none}
+  textarea.input{resize:vertical;min-height:60px}
+  .field-wrap{margin-bottom:12px}
+  .field-label{font-size:12px;color:var(--text3);margin-bottom:6px;font-weight:600}
+  .btn-primary{width:100%;padding:14px;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-size:15px;font-weight:800;border:none;margin-bottom:8px}
+  .btn-danger{width:100%;padding:13px;border-radius:14px;background:rgba(246,106,106,.12);color:var(--red);font-size:14px;font-weight:700;border:1px solid rgba(246,106,106,.3);margin-bottom:8px}
+  .btn-ghost{width:100%;padding:12px;border-radius:14px;background:transparent;color:var(--text3);font-size:13px;font-weight:600;border:none}
+  .btn-icon{width:34px;height:34px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+  .row-item{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--border);cursor:pointer}
+  .row-item:last-child{border-bottom:none}
+  .row-title{font-size:14px;font-weight:700}
+  .row-sub{font-size:12px;color:var(--text3);margin-top:1px}
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:99px;font-size:13px;font-weight:700;border:1px solid var(--border);background:var(--bg3);color:var(--text2)}
+  .pill.sel{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .pill-sel{display:flex;flex-wrap:wrap;gap:8px}
+  .toast{position:fixed;bottom:calc(20px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:var(--accent-ink);padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;transition:all .25s;z-index:9999;white-space:nowrap;pointer-events:none;max-width:88vw;overflow:hidden;text-overflow:ellipsis}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .empty{padding:30px 4px;text-align:center;color:var(--text3);font-size:13px}
+  .empty-icon{font-size:34px;margin-bottom:8px}
+  .empty-text{font-size:14px;font-weight:700;color:var(--text2)}
+  .empty-sub{font-size:12px;margin-top:4px}
+
+  .quick-add{display:flex;gap:8px;margin-bottom:4px}
+  .quick-add .input{flex:1}
+  .quick-hint{font-size:11px;color:var(--text3);margin:6px 2px 4px}
+
+  .cumples-strip{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin-bottom:4px}
+  .cumple-chip{flex-shrink:0;background:linear-gradient(135deg,rgba(197,139,255,.18),rgba(197,139,255,.05));border:1px solid rgba(197,139,255,.35);border-radius:14px;padding:10px 14px;min-width:110px}
+  .cumple-chip .cc-nom{font-size:13px;font-weight:800;color:var(--purple)}
+  .cumple-chip .cc-fecha{font-size:11px;color:var(--text3);margin-top:2px}
+
+  .nav-bottom{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--bg2);border-top:1px solid var(--border);display:flex;height:calc(58px + var(--sab));padding-bottom:var(--sab)}
+  .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text3);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;background:none;border:none}
+  .nav-btn .ni{font-size:21px}
+  .nav-btn.active{color:var(--accent)}
+
+  .fab{position:fixed;right:16px;bottom:calc(74px + var(--sab));z-index:90;width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:26px;border:none;box-shadow:0 8px 20px -6px rgba(242,169,59,.6);display:flex;align-items:center;justify-content:center}
+
+  .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(5,9,18,.72);display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s}
+  .modal-overlay.open{opacity:1;pointer-events:auto}
+  .modal{background:var(--bg2);width:100%;max-height:88dvh;overflow-y:auto;border-radius:22px 22px 0 0;padding:20px 18px calc(22px + var(--sab));transform:translateY(16px);transition:transform .2s}
+  .modal-overlay.open .modal{transform:translateY(0)}
+  .modal-title{font-size:18px;font-weight:900;margin-bottom:14px}
+
+  .admin-menu-btn{width:100%;display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--border);background:none;border-left:none;border-right:none;border-top:none;color:var(--text);text-align:left}
+  .admin-menu-btn:last-child{border-bottom:none}
+  .admin-menu-ic{font-size:20px;width:30px;text-align:center;flex-shrink:0}
+  .admin-menu-txt{flex:1;display:flex;flex-direction:column}
+  .admin-menu-titulo{font-size:14px;font-weight:700}
+  .admin-menu-sub{font-size:11px;color:var(--text3)}
+
+  .aviso-box{font-size:11px;color:var(--text3);line-height:1.5}
+
+  .cat-row{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--border)}
+  .cat-row:last-child{border-bottom:none}
+  .cat-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0}
+  .cat-nombre{flex:1;font-size:14px;font-weight:700}
+  .swatches{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+  .swatch{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer}
+  .swatch.sel{border-color:var(--text)}
+
+  .chk-row{display:flex;align-items:center;gap:8px;padding:6px 0}
+  .chk-row .chk-txt{flex:1;font-size:14px}
+  .chk-row .chk-txt.done{text-decoration:line-through;color:var(--text3)}
+
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .cal-nav .cal-mes{font-size:16px;font-weight:800}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px}
+  .cal-wd{text-align:center;font-size:10px;color:var(--text3);font-weight:700;padding-bottom:4px}
+  .cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;font-size:13px;font-weight:700;color:var(--text2);position:relative;background:var(--bg3);cursor:pointer}
+  .cal-day.blank{background:transparent;cursor:default}
+  .cal-day.hoy{border:1.5px solid var(--accent)}
+  .cal-day.sel{background:var(--accent);color:var(--accent-ink)}
+  .cal-dots{display:flex;gap:2px;position:absolute;bottom:4px}
+  .cal-dots span{width:4px;height:4px;border-radius:50%}
+
+  .banner-record{position:fixed;left:12px;right:12px;bottom:calc(70px + var(--sab));z-index:300;background:var(--card);border:1px solid var(--accent);border-radius:16px;padding:14px;box-shadow:var(--shadow);display:none}
+  .banner-record.show{display:block}
+  .banner-record .br-titulo{font-size:14px;font-weight:800;margin-bottom:2px}
+  .banner-record .br-sub{font-size:12px;color:var(--text3);margin-bottom:10px}
+  .banner-record .br-btns{display:flex;gap:6px;flex-wrap:wrap}
+  .banner-record .br-btns button{flex:1;min-width:70px;padding:8px 6px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:11px;font-weight:700}
+  .banner-record .br-btns button.principal{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* ═══════════════════════════════════════════════════════════════
+   IDENTIDAD FRIGURSO — splash (puro CSS, se va solo) + traba de
+   privacidad simple (contraseña, no cifra datos). Bloque copiado
+   tal cual del resto del portafolio (ver Frigurso Inversiones).
+   ═══════════════════════════════════════════════════════════════ */
+#fg-splash{
+  position:fixed;inset:0;z-index:9000;background:#0b1220;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;
+  animation:fg-splash-out .6s ease 2.8s forwards;
+}
+.fg-sash{
+  position:absolute;width:130vw;height:22vh;max-height:170px;
+  background:linear-gradient(90deg,#d7263d 0%,#d7263d 92%,#5fb0e8 100%);
+  transform:rotate(-22deg) translateX(-140vw);top:46%;left:0;margin-top:-11vh;
+  box-shadow:0 0 60px rgba(215,38,61,.3);
+  animation:fg-sash-sweep 1.3s cubic-bezier(.16,.8,.24,1) both;
+}
+@keyframes fg-sash-sweep{0%{transform:rotate(-22deg) translateX(-140vw);}55%{transform:rotate(-22deg) translateX(0);}100%{transform:rotate(-22deg) translateX(0);}}
+@keyframes fg-splash-out{to{opacity:0;pointer-events:none;visibility:hidden;}}
+.fg-wordmark{
+  position:relative;z-index:5;font-weight:800;font-stretch:condensed;
+  font-size:min(11vw,42px);letter-spacing:.02em;
+  color:#f5f7fa;text-transform:uppercase;
+  opacity:0;transform:translateY(10px);animation:fg-word-in .5s ease .85s both;
+}
+@keyframes fg-word-in{to{opacity:1;transform:translateY(0);}}
+.fg-tagline{
+  position:relative;z-index:5;font-family:monospace;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:#9fb0cc;margin-top:8px;
+  opacity:0;animation:fg-word-in .5s ease 1.05s both;
+}
+#fg-lock{position:fixed;inset:0;z-index:8000;background:#0b1220;display:flex;align-items:center;justify-content:center;padding:24px;}
+.fg-lock-card{width:100%;max-width:380px;}
+.fg-lock-brand{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:30px;font-weight:800;font-stretch:condensed;font-size:15px;letter-spacing:.04em;color:#9fb0cc;text-transform:uppercase;}
+.fg-lock-brand .dot{width:9px;height:9px;border-radius:2px;background:#d7263d;transform:rotate(45deg);flex-shrink:0;}
+.fg-lock-title{font-size:14px;font-weight:700;margin-bottom:4px;color:#e8edf7;}
+.fg-lock-sub{font-size:12px;color:#63739a;margin-bottom:16px;}
+.fg-card{background:#111a2e;border:1px solid #1e2b47;border-radius:12px;padding:20px;}
+.fg-card label{display:block;font-size:12px;color:#9fb0cc;margin-bottom:6px;}
+.fg-card input{width:100%;background:#0e1626;border:1px solid #1e2b47;border-radius:9px;padding:11px 12px;color:#e8edf7;font-size:14px;box-sizing:border-box;}
+.fg-card .field{margin-bottom:14px;}
+.fg-card .btn-block{width:100%;border:none;border-radius:12px;padding:12px 18px;font-weight:700;font-size:13px;background:linear-gradient(135deg,#2dd4bf,#3b82f6);color:#06131f;cursor:pointer;}
+.fg-err{color:#ef4444;font-size:12px;margin:-4px 0 10px;display:none;}
+.fg-switch{text-align:center;margin-top:16px;font-size:12px;color:#63739a;}
+.fg-switch a{color:#2dd4bf;cursor:pointer;text-decoration:underline;}
+@media (prefers-reduced-motion: reduce){
+  .fg-sash{animation:none;transform:rotate(-22deg) translateX(0);}
+  .fg-wordmark,.fg-tagline{animation:none;opacity:1;transform:none;}
+  #fg-splash{animation-delay:.1s;}
+}
+</style>
+</head>
+<body>
+
+<div id="fg-splash" aria-hidden="true">
+  <div class="fg-sash"></div>
+  <div class="fg-wordmark">Frigurso</div>
+  <div class="fg-tagline">Agenda</div>
+</div>
+
+<div id="fg-lock">
+  <div class="fg-lock-card">
+    <div class="fg-lock-brand"><div class="dot"></div><span>Frigurso</span></div>
+
+    <div id="lk-crear" class="fg-card" style="display:block;">
+      <div class="fg-lock-title">Creá tu acceso</div>
+      <div class="fg-lock-sub">Es solo para que nadie más abra la app desde este celular. No cifra los datos.</div>
+      <div class="field"><label>Contraseña (mínimo 4 caracteres)</label><input type="password" id="lk-pass" placeholder="••••••••"></div>
+      <div class="field"><label>Repetir contraseña</label><input type="password" id="lk-pass2" placeholder="••••••••"></div>
+      <div class="fg-err" id="lk-crear-err"></div>
+      <button class="btn-block" onclick="fgCrearAcceso()">Crear y entrar</button>
+    </div>
+
+    <div id="lk-ingresar" class="fg-card" style="display:none;">
+      <div class="fg-lock-title">Ingresá tu contraseña</div>
+      <div class="field"><input type="password" id="lk-pass-in" placeholder="Contraseña" onkeydown="if(event.key==='Enter')fgIngresarAcceso()"></div>
+      <div class="fg-err" id="lk-ing-err"></div>
+      <button class="btn-block" onclick="fgIngresarAcceso()">Ingresar</button>
+      <div class="fg-switch"><a onclick="fgOlvideAcceso()">Olvidé mi contraseña</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ HOY ══════════ -->
+<div class="page active" id="page-hoy">
+  <div class="header-title">📋 Frigurso Agenda</div>
+  <div class="header-sub" id="hoy-sub">—</div>
+  <div style="height:10px"></div>
+
+  <div class="quick-add">
+    <input type="text" class="input" id="qa-input" placeholder="Ej: mañana 15hs dentista" onkeydown="if(event.key==='Enter')agregarRapido()">
+    <button class="btn-icon" style="width:48px;height:48px;font-size:20px;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)" onclick="agregarRapido()">＋</button>
+  </div>
+  <div class="quick-hint">Escribí y Enter. Entiende "hoy", "mañana", días ("lunes"), "cada lunes", horarios ("15hs", "15:30", "3pm").</div>
+
+  <div id="hoy-cumples"></div>
+  <div id="hoy-listas"></div>
+</div>
+
+<!-- ══════════ CALENDARIO ══════════ -->
+<div class="page" id="page-calendario">
+  <div class="header-title">📅 Calendario</div>
+  <div style="height:10px"></div>
+  <div class="cal-nav">
+    <button class="btn-icon" onclick="calMoverMes(-1)">←</button>
+    <div class="cal-mes" id="cal-mes-lbl">—</div>
+    <button class="btn-icon" onclick="calMoverMes(1)">→</button>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+  <div class="section-title" id="cal-dia-lbl">—</div>
+  <div id="cal-dia-lista"></div>
+</div>
+<button class="fab" id="fab-calendario" style="display:none" onclick="abrirModalItem(null, _calSeleccionado)">＋</button>
+
+<!-- ══════════ BUSCAR ══════════ -->
+<div class="page" id="page-buscar">
+  <div class="header-title">🔍 Buscar</div>
+  <div style="height:10px"></div>
+  <input type="text" class="input" id="bu-input" placeholder="Buscar por título o nota..." oninput="renderBuscar()">
+  <div style="height:12px"></div>
+  <div id="bu-resultados"></div>
+</div>
+
+<!-- ══════════ MÁS ══════════ -->
+<div class="page" id="page-mas">
+  <div class="header-title">☰ Más</div>
+  <div style="height:12px"></div>
+
+  <div class="section-title">Categorías</div>
+  <div class="card" style="padding:6px 4px" id="mas-categorias-card"></div>
+  <div class="card">
+    <div class="field-label">Nueva categoría</div>
+    <div class="swatches" id="cat-swatches"></div>
+    <input type="text" class="input" id="cat-nombre" placeholder="Nombre de la categoría" style="margin-bottom:8px">
+    <button class="btn-primary" style="margin-bottom:0" onclick="crearCategoria()">Agregar categoría</button>
+  </div>
+
+  <div class="section-title">Notificaciones</div>
+  <div class="card">
+    <div class="row-sub" id="mas-notif-estado" style="margin-bottom:10px">—</div>
+    <button class="btn-primary" onclick="activarNotificaciones()">🔔 Activar notificaciones</button>
+    <button class="btn-ghost" style="margin-bottom:0" onclick="probarRecordatorio()">🔊 Probar sonido y aviso</button>
+  </div>
+  <div class="card aviso-box">
+    Los recordatorios suenan mientras la app está abierta o recién en segundo plano. Si el celular estuvo horas con la app cerrada del todo, el aviso puede no sonar justo a tiempo — igual vas a verlo apenas la abras de nuevo. Para lo realmente crítico (vuelos, turnos importantes), usá además una alarma nativa del celular.
+  </div>
+
+  <div class="section-title">Copia de seguridad</div>
+  <div class="card" style="padding:6px 4px">
+    <button class="admin-menu-btn" onclick="exportarBackup()">
+      <span class="admin-menu-ic">⬇️</span>
+      <span class="admin-menu-txt"><span class="admin-menu-titulo">Exportar</span><span class="admin-menu-sub">Descarga un archivo .json con toda tu agenda</span></span>
+    </button>
+    <button class="admin-menu-btn" onclick="document.getElementById('import-file').click()">
+      <span class="admin-menu-ic">⬆️</span>
+      <span class="admin-menu-txt"><span class="admin-menu-titulo">Importar</span><span class="admin-menu-sub">Reemplaza los datos actuales por los del archivo</span></span>
+    </button>
+    <input type="file" id="import-file" accept="application/json" style="display:none" onchange="importarBackup(event)">
+  </div>
+
+  <div class="section-title">App</div>
+  <div class="card" style="padding:6px 4px">
+    <button class="admin-menu-btn" onclick="forzarUpdate()">
+      <span class="admin-menu-ic">🔄</span>
+      <span class="admin-menu-txt"><span class="admin-menu-titulo">Actualizar app</span><span class="admin-menu-sub">Si hiciste un cambio y no lo ves</span></span>
+    </button>
+    <button class="admin-menu-btn" onclick="fgMostrarLock()">
+      <span class="admin-menu-ic">🔒</span>
+      <span class="admin-menu-txt"><span class="admin-menu-titulo">Bloquear app</span><span class="admin-menu-sub">Pide la contraseña de nuevo</span></span>
+    </button>
+  </div>
+</div>
+
+<nav class="nav-bottom" id="navbar" style="display:none">
+  <button class="nav-btn active" id="nav-hoy" onclick="navGo('hoy',this)"><span class="ni">🏠</span><span>Hoy</span></button>
+  <button class="nav-btn" id="nav-calendario" onclick="navGo('calendario',this)"><span class="ni">📅</span><span>Calendario</span></button>
+  <button class="nav-btn" id="nav-buscar" onclick="navGo('buscar',this)"><span class="ni">🔍</span><span>Buscar</span></button>
+  <button class="nav-btn" id="nav-mas" onclick="navGo('mas',this)"><span class="ni">☰</span><span>Más</span></button>
+</nav>
+<button class="fab" id="fab-hoy" onclick="abrirModalItem(null, fechaHoy())">＋</button>
+
+<!-- MODAL: NUEVO/EDITAR ITEM -->
+<div class="modal-overlay" id="modal-item" onclick="if(event.target===this)cerrarModal('item')">
+  <div class="modal">
+    <div class="modal-title" id="mod-title">+ Nuevo</div>
+    <input type="hidden" id="mod-id">
+
+    <div class="field-wrap">
+      <div class="field-label">Tipo</div>
+      <div class="pill-sel" id="mod-tipo-pills"></div>
+    </div>
+
+    <div class="field-wrap"><div class="field-label">Título</div><input type="text" class="input" id="mod-titulo" placeholder="Ej: Turno con el dentista"></div>
+
+    <div class="field-wrap"><div class="field-label">Fecha</div><input type="date" class="input" id="mod-fecha"></div>
+
+    <div class="field-wrap" id="mod-hora-wrap">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-bottom:8px">
+        <input type="checkbox" id="mod-todo-dia" onchange="toggleModHora()"> Todo el día (sin horario)
+      </label>
+      <div id="mod-hora-input-wrap"><div class="field-label">Hora</div><input type="time" class="input" id="mod-hora"></div>
+    </div>
+
+    <div class="field-wrap" id="mod-recur-wrap">
+      <div class="field-label">Se repite</div>
+      <div class="pill-sel" id="mod-recur-pills"></div>
+    </div>
+    <div class="field-wrap aviso-box" id="mod-recur-cumple-nota" style="display:none">🔁 Los cumpleaños se repiten todos los años automáticamente.</div>
+
+    <div class="field-wrap">
+      <div class="field-label">Categoría</div>
+      <div class="pill-sel" id="mod-categoria-pills"></div>
+    </div>
+
+    <div class="field-wrap">
+      <div class="field-label">Prioridad</div>
+      <div class="pill-sel" id="mod-prioridad-pills"></div>
+    </div>
+
+    <div class="field-wrap">
+      <div class="field-label">Recordatorio</div>
+      <select class="input" id="mod-aviso">
+        <option value="">Sin aviso</option>
+        <option value="0">Al momento</option>
+        <option value="15">15 min antes</option>
+        <option value="60">1 hora antes</option>
+        <option value="1440">1 día antes</option>
+      </select>
+    </div>
+
+    <div class="field-wrap">
+      <div class="field-label">Subtareas (opcional)</div>
+      <div id="mod-checklist-list"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" class="input" id="mod-checklist-input" placeholder="Agregar subtarea" onkeydown="if(event.key==='Enter'){event.preventDefault();agregarChecklistItem();}">
+        <button class="btn-icon" onclick="agregarChecklistItem()">＋</button>
+      </div>
+    </div>
+
+    <div class="field-wrap"><div class="field-label">Notas (opcional)</div><textarea class="input" id="mod-notas" placeholder=""></textarea></div>
+
+    <button class="btn-primary" onclick="guardarItem()">Guardar</button>
+    <button class="btn-danger" id="btn-borrar-item" onclick="borrarItem()" style="display:none">🗑 Borrar</button>
+    <button class="btn-ghost" onclick="cerrarModal('item')">Cancelar</button>
+  </div>
+</div>
+
+<div class="banner-record" id="banner-record">
+  <div class="br-titulo" id="br-titulo">🔔 Recordatorio</div>
+  <div class="br-sub" id="br-sub"></div>
+  <div class="br-btns">
+    <button class="principal" onclick="bannerListo()">Listo</button>
+    <button onclick="bannerPosponer(15)">+15 min</button>
+    <button onclick="bannerPosponer(60)">+1 hora</button>
+    <button onclick="bannerCerrar()">Cerrar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// HELPERS GENERALES
+// ═══════════════════════════════════════════════════════════════
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+let _toastT;
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(_toastT); _toastT=setTimeout(()=>el.classList.remove('show'),2600); }
+function pad(n){ return String(n).padStart(2,'0'); }
+function fechaHoy(){ const n=new Date(); return `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())}`; }
+function fmtDate(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function sumarDias(fechaStr,n){ const d=new Date(fechaStr+'T00:00:00'); d.setDate(d.getDate()+n); return fmtDate(d); }
+function sumarMes(d,n){ const nd=new Date(d); const day=nd.getDate(); nd.setDate(1); nd.setMonth(nd.getMonth()+n); const ultimoDia=new Date(nd.getFullYear(),nd.getMonth()+1,0).getDate(); nd.setDate(Math.min(day,ultimoDia)); return nd; }
+function fmtFechaCorta(s){ if(!s) return ''; const [y,m,d]=s.split('-'); const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']; return d+' '+MES[parseInt(m)-1]; }
+function fmtFechaLarga(s){ if(!s) return ''; const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado']; const d=new Date(s+'T00:00:00'); return DIAS[d.getDay()]+' '+fmtFechaCorta(s); }
+
+// ═══════════════════════════════════════════════════════════════
+// CATEGORÍAS
+// ═══════════════════════════════════════════════════════════════
+const PALETA=['#5fb0e8','#f2a93b','#3ddc84','#f66a6a','#c58bff','#4dd0e1','#ff8a65','#dce775'];
+function categoriasDefault(){
+  return [
+    {id:'personal',nombre:'Personal',color:'#5fb0e8'},
+    {id:'trabajo',nombre:'Trabajo',color:'#f2a93b'},
+    {id:'familia',nombre:'Familia',color:'#3ddc84'},
+    {id:'salud',nombre:'Salud',color:'#f66a6a'},
+    {id:'cumple',nombre:'Cumpleaños',color:'#c58bff'},
+  ];
+}
+function categoriaPorId(id){ return DB.categorias.find(c=>c.id===id) || DB.categorias[0] || {id:'personal',nombre:'Personal',color:'#5fb0e8'}; }
+
+// ═══════════════════════════════════════════════════════════════
+// DB / PERSISTENCIA (localStorage plano, sin cifrar — ver candado más abajo)
+// ═══════════════════════════════════════════════════════════════
+let DB=null;
+function _dbVacia(){ return { items:[], categorias:categoriasDefault(), notificados:{}, snooze:{} }; }
+function cargarDB(){
+  try{
+    const raw=localStorage.getItem('fg_agenda_db');
+    DB=raw?JSON.parse(raw):_dbVacia();
+  }catch(e){ DB=_dbVacia(); }
+  if(!DB.items) DB.items=[];
+  if(!DB.categorias || !DB.categorias.length) DB.categorias=categoriasDefault();
+  if(!DB.notificados) DB.notificados={};
+  if(!DB.snooze) DB.snooze={};
+}
+function save(){ localStorage.setItem('fg_agenda_db', JSON.stringify(DB)); }
+
+// ═══════════════════════════════════════════════════════════════
+// OCURRENCIAS / RECURRENCIA
+// ═══════════════════════════════════════════════════════════════
+function ocurrenciasEnRango(item, desdeStr, hastaStr){
+  const desde=new Date(desdeStr+'T00:00:00'), hasta=new Date(hastaStr+'T00:00:00');
+  const base=new Date(item.fecha+'T00:00:00');
+  const out=[];
+  if(item.recurrencia==='ninguna'){
+    if(base>=desde && base<=hasta) out.push(item.fecha);
+    return out;
+  }
+  if(base>hasta) return out;
+  if(item.recurrencia==='diaria'){
+    let d=new Date(Math.max(base.getTime(),desde.getTime()));
+    while(d<=hasta){ out.push(fmtDate(d)); d.setDate(d.getDate()+1); }
+    return out;
+  }
+  if(item.recurrencia==='semanal'){
+    let d=new Date(base);
+    while(d<desde) d.setDate(d.getDate()+7);
+    while(d<=hasta){ out.push(fmtDate(d)); d.setDate(d.getDate()+7); }
+    return out;
+  }
+  if(item.recurrencia==='mensual'){
+    let d=new Date(base);
+    let guard=0;
+    while(d<desde && guard<600){ d=sumarMes(d,1); guard++; }
+    guard=0;
+    while(d<=hasta && guard<60){ out.push(fmtDate(d)); d=sumarMes(d,1); guard++; }
+    return out;
+  }
+  if(item.recurrencia==='anual'){
+    let d=new Date(base);
+    let guard=0;
+    while(d<desde && guard<200){ d=new Date(d.getFullYear()+1,d.getMonth(),d.getDate()); guard++; }
+    guard=0;
+    while(d<=hasta && guard<30){ out.push(fmtDate(d)); d=new Date(d.getFullYear()+1,d.getMonth(),d.getDate()); guard++; }
+    return out;
+  }
+  return out;
+}
+function tieneOcurrenciaEnFecha(item,fecha){ return ocurrenciasEnRango(item,fecha,fecha).length>0; }
+function estaHecho(item, fecha){ return item.recurrencia==='ninguna' ? !!item.hecho : !!(item.completados && item.completados[fecha]); }
+function marcarHecho(item, fecha, val){
+  if(item.recurrencia==='ninguna'){ item.hecho=val; }
+  else { if(!item.completados) item.completados={}; item.completados[fecha]=val; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEXTO RÁPIDO (parseo best-effort en español)
+// ═══════════════════════════════════════════════════════════════
+const DIAS_SEMANA=['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
+function normalizarTxt(s){ return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
+function proximoDiaSemana(idx){
+  const hoy=new Date(); const hoyIdx=hoy.getDay();
+  let delta=(idx-hoyIdx+7)%7;
+  return sumarDias(fechaHoy(), delta);
+}
+function parseTextoRapido(textoOriginal){
+  let t=' '+textoOriginal.trim()+' ';
+  let tNorm=' '+normalizarTxt(textoOriginal.trim())+' ';
+  let fecha=fechaHoy();
+  let hora=null;
+  let recurrencia='ninguna';
+
+  function cortar(re){ const m=tNorm.match(re); if(!m) return null; const idx=m.index; const len=m[0].length; t=t.slice(0,idx)+' '+t.slice(idx+len); tNorm=tNorm.slice(0,idx)+' '+tNorm.slice(idx+len); return m; }
+
+  if(cortar(/\bpasado\s*manana\b/)){ fecha=sumarDias(fechaHoy(),2); }
+  else if(cortar(/\bmanana\b/)){ fecha=sumarDias(fechaHoy(),1); }
+  else if(cortar(/\bhoy\b/)){ fecha=fechaHoy(); }
+  else{
+    const mCadaDia=cortar(/\bcada\s+dia\b/);
+    if(mCadaDia){ recurrencia='diaria'; }
+    else{
+      const mCadaMes=cortar(/\bcada\s+mes\b/);
+      if(mCadaMes){ recurrencia='mensual'; }
+      else{
+        const mCadaAnio=cortar(/\bcada\s+a[nñ]o\b/);
+        if(mCadaAnio){ recurrencia='anual'; }
+        else{
+          let encontrado=false;
+          for(let i=0;i<DIAS_SEMANA.length;i++){
+            const mCadaX=cortar(new RegExp('\\bcada\\s+'+DIAS_SEMANA[i]+'\\b'));
+            if(mCadaX){ recurrencia='semanal'; fecha=proximoDiaSemana(i); encontrado=true; break; }
+          }
+          if(!encontrado){
+            for(let i=0;i<DIAS_SEMANA.length;i++){
+              const mDia=cortar(new RegExp('\\b'+DIAS_SEMANA[i]+'\\b'));
+              if(mDia){ fecha=proximoDiaSemana(i); encontrado=true; break; }
+            }
+          }
+          if(!encontrado){
+            const mFecha=t.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
+            if(mFecha){
+              const hoyD=new Date();
+              const d=parseInt(mFecha[1]), m=parseInt(mFecha[2]);
+              const y=mFecha[3]?(mFecha[3].length===2?2000+parseInt(mFecha[3]):parseInt(mFecha[3])):hoyD.getFullYear();
+              if(m>=1&&m<=12&&d>=1&&d<=31){
+                fecha=`${y}-${pad(m)}-${pad(d)}`;
+                t=t.replace(mFecha[0],' ');
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  let mHora=t.match(/\b(\d{1,2}):(\d{2})\s*(am|pm|hs)?\b/i);
+  if(!mHora) mHora=t.match(/\b(\d{1,2})\s?hs\.?\b/i);
+  if(!mHora) mHora=t.match(/\ba\s+las?\s+(\d{1,2})(?::(\d{2}))?\b/i);
+  if(!mHora) mHora=t.match(/\b(\d{1,2})\s?(am|pm)\b/i);
+  if(mHora){
+    let hh=parseInt(mHora[1]);
+    let mm=mHora[2]&&/^\d+$/.test(mHora[2])?parseInt(mHora[2]):0;
+    const marcador=(mHora[3]||mHora[2]||'').toLowerCase();
+    if(marcador==='pm' && hh<12) hh+=12;
+    if(marcador==='am' && hh===12) hh=0;
+    if(hh>=0&&hh<=23&&mm>=0&&mm<=59){
+      hora=pad(hh)+':'+pad(mm);
+      t=t.replace(mHora[0],' ');
+    }
+  }
+
+  let titulo=t.replace(/\s+/g,' ').trim();
+  if(!titulo) titulo='Sin título';
+  titulo=titulo.charAt(0).toUpperCase()+titulo.slice(1);
+  return {titulo, fecha, hora, recurrencia};
+}
+function agregarRapido(){
+  const inp=document.getElementById('qa-input');
+  const texto=inp.value.trim();
+  if(!texto){ return; }
+  const p=parseTextoRapido(texto);
+  const item={
+    id:uid(), tipo:'evento', titulo:p.titulo, fecha:p.fecha, hora:p.hora,
+    recurrencia:p.recurrencia, categoriaId:DB.categorias[0].id, prioridad:'normal',
+    avisoMin: p.hora!=null ? 15 : null, notas:'', checklist:[], hecho:false, completados:{},
+  };
+  DB.items.push(item);
+  save();
+  inp.value='';
+  toast('✅ Agregado: '+p.titulo);
+  rerenderPaginaActual();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAV / MODALES
+// ═══════════════════════════════════════════════════════════════
+let _pagActual='hoy';
+function navGo(page,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('fab-calendario').style.display='none';
+  document.getElementById('page-'+page).classList.add('active');
+  if(btn) btn.classList.add('active');
+  _pagActual=page;
+  if(page==='hoy') renderHoy();
+  if(page==='calendario'){ renderCalendario(); document.getElementById('fab-calendario').style.display=''; }
+  if(page==='buscar') renderBuscar();
+  if(page==='mas') renderMas();
+  document.getElementById('fab-hoy').style.display = (page==='hoy') ? '' : 'none';
+  if(!_poppingState) history.pushState({page},'','');
+}
+let _poppingState=false;
+function abrirModal(id){ document.getElementById('modal-'+id).classList.add('open'); if(!_poppingState) history.pushState({modal:id},'',''); }
+function cerrarModal(id){ document.getElementById('modal-'+id).classList.remove('open'); if(!_poppingState) history.back(); }
+window.addEventListener('popstate', e=>{
+  _poppingState=true;
+  const abierto=document.querySelector('.modal-overlay.open');
+  if(abierto){ abierto.classList.remove('open'); }
+  else{
+    const page=(e.state&&e.state.page)||'hoy';
+    const btn=document.getElementById('nav-'+page);
+    navGo(page,btn);
+  }
+  _poppingState=false;
+});
+function rerenderPaginaActual(){
+  if(_pagActual==='hoy') renderHoy();
+  else if(_pagActual==='calendario') renderCalendario();
+  else if(_pagActual==='buscar') renderBuscar();
+  else if(_pagActual==='mas') renderMas();
+}
+function emptyHtml(icon,texto,sub){ return '<div class="empty"><div class="empty-icon">'+icon+'</div><div class="empty-text">'+esc(texto)+'</div><div class="empty-sub">'+esc(sub||'')+'</div></div>'; }
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER DE FILAS DE ITEM (compartido entre Hoy / Calendario / Buscar)
+// ═══════════════════════════════════════════════════════════════
+function itemRowHtml(item,fecha){
+  const cat=categoriaPorId(item.categoriaId);
+  const esTarea=item.tipo==='tarea';
+  const hecho=esTarea && estaHecho(item,fecha);
+  const iconoTipo=item.tipo==='cumple'?'🎂':(item.tipo==='tarea'?'✓':'📅');
+  const checkBtn=esTarea
+    ? '<button class="btn-icon" onclick="event.stopPropagation();toggleHecho(\''+item.id+'\',\''+fecha+'\')" style="'+(hecho?'background:rgba(61,220,132,.18);color:var(--green);border-color:rgba(61,220,132,.4)':'')+'">'+(hecho?'✅':'⬜')+'</button>'
+    : '<div class="btn-icon" style="background:'+cat.color+'22;color:'+cat.color+'">'+iconoTipo+'</div>';
+  const subPartes=[cat.nombre];
+  if(item.tipo!=='cumple') subPartes.push(item.hora?item.hora:'Todo el día'); else subPartes.push('🎂');
+  if(item.recurrencia!=='ninguna') subPartes.push('🔁');
+  return '<div class="row-item" onclick="abrirModalItem(\''+item.id+'\',\''+fecha+'\')">'
+    + checkBtn
+    + '<div style="flex:1;min-width:0"><div class="row-title" style="'+(hecho?'text-decoration:line-through;color:var(--text3)':'')+'">'+(item.prioridad==='alta'?'🔴 ':'')+esc(item.titulo)+'</div>'
+    + '<div class="row-sub">'+subPartes.join(' · ')+'</div></div>'
+    + '</div>';
+}
+function ordenarPorHora(lista){
+  return lista.sort((a,b)=>{
+    if(a.fecha!==b.fecha) return a.fecha<b.fecha?-1:1;
+    if(!a.item.hora && !b.item.hora) return 0;
+    if(!a.item.hora) return 1;
+    if(!b.item.hora) return -1;
+    return a.item.hora<b.item.hora?-1:(a.item.hora>b.item.hora?1:0);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PÁGINA HOY
+// ═══════════════════════════════════════════════════════════════
+function renderHoy(){
+  const hoy=fechaHoy();
+  const manana=sumarDias(hoy,1);
+  const finSemana=sumarDias(hoy,7);
+  document.getElementById('hoy-sub').textContent=fmtFechaLarga(hoy);
+
+  const vencidos=DB.items.filter(it=>it.tipo==='tarea'&&it.recurrencia==='ninguna'&&it.fecha<hoy&&!it.hecho)
+    .map(it=>({item:it,fecha:it.fecha}));
+
+  const grupoHoy=[], grupoManana=[], grupoSemana=[];
+  DB.items.forEach(it=>{
+    ocurrenciasEnRango(it,hoy,finSemana).forEach(fecha=>{
+      if(fecha===hoy) grupoHoy.push({item:it,fecha});
+      else if(fecha===manana) grupoManana.push({item:it,fecha});
+      else grupoSemana.push({item:it,fecha});
+    });
+  });
+  ordenarPorHora(vencidos); ordenarPorHora(grupoHoy); ordenarPorHora(grupoManana); ordenarPorHora(grupoSemana);
+
+  let html='';
+  if(vencidos.length){ html+='<div class="section-title">⚠️ Atrasado</div><div class="card" style="padding:2px 10px">'+vencidos.map(x=>itemRowHtml(x.item,x.fecha)).join('')+'</div>'; }
+  html+='<div class="section-title">Hoy</div>';
+  html+= grupoHoy.length ? '<div class="card" style="padding:2px 10px">'+grupoHoy.map(x=>itemRowHtml(x.item,x.fecha)).join('')+'</div>' : emptyHtml('☀️','Nada para hoy','Usá el buscador de arriba para agregar algo');
+  html+='<div class="section-title">Mañana</div>';
+  html+= grupoManana.length ? '<div class="card" style="padding:2px 10px">'+grupoManana.map(x=>itemRowHtml(x.item,x.fecha)).join('')+'</div>' : emptyHtml('🌙','Nada para mañana','');
+  if(grupoSemana.length){ html+='<div class="section-title">Esta semana</div><div class="card" style="padding:2px 10px">'+grupoSemana.map(x=>itemRowHtml(x.item,x.fecha)).join('')+'</div>'; }
+  document.getElementById('hoy-listas').innerHTML=html;
+
+  const cumpleItems=DB.items.filter(it=>it.tipo==='cumple');
+  const proximos=[];
+  cumpleItems.forEach(it=>{
+    ocurrenciasEnRango(it,hoy,sumarDias(hoy,14)).forEach(fecha=>proximos.push({item:it,fecha}));
+  });
+  proximos.sort((a,b)=>a.fecha<b.fecha?-1:1);
+  const cumplesEl=document.getElementById('hoy-cumples');
+  if(proximos.length){
+    cumplesEl.innerHTML='<div class="cumples-strip">'+proximos.map(x=>
+      '<div class="cumple-chip" onclick="abrirModalItem(\''+x.item.id+'\',\''+x.fecha+'\')"><div class="cc-nom">🎂 '+esc(x.item.titulo)+'</div><div class="cc-fecha">'+fmtFechaCorta(x.fecha)+(x.fecha===hoy?' · ¡hoy!':'')+'</div></div>'
+    ).join('')+'</div>';
+  } else cumplesEl.innerHTML='';
+}
+function toggleHecho(id,fecha){
+  const item=DB.items.find(i=>i.id===id); if(!item) return;
+  marcarHecho(item,fecha,!estaHecho(item,fecha));
+  save();
+  rerenderPaginaActual();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PÁGINA CALENDARIO
+// ═══════════════════════════════════════════════════════════════
+let _calYear, _calMonth, _calSeleccionado;
+function calInit(){
+  const hoy=new Date();
+  _calYear=hoy.getFullYear(); _calMonth=hoy.getMonth();
+  _calSeleccionado=fechaHoy();
+}
+function calMoverMes(delta){
+  _calMonth+=delta;
+  if(_calMonth<0){ _calMonth=11; _calYear--; }
+  if(_calMonth>11){ _calMonth=0; _calYear++; }
+  renderCalendario();
+}
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_CORTOS=['L','M','M','J','V','S','D'];
+function renderCalendario(){
+  document.getElementById('cal-mes-lbl').textContent=MESES[_calMonth]+' '+_calYear;
+  const primero=new Date(_calYear,_calMonth,1);
+  const diasEnMes=new Date(_calYear,_calMonth+1,0).getDate();
+  const offset=(primero.getDay()+6)%7; // lunes-first
+  const hoy=fechaHoy();
+  let html=DIAS_CORTOS.map(d=>'<div class="cal-wd">'+d+'</div>').join('');
+  for(let i=0;i<offset;i++) html+='<div class="cal-day blank"></div>';
+  for(let d=1;d<=diasEnMes;d++){
+    const fecha=`${_calYear}-${pad(_calMonth+1)}-${pad(d)}`;
+    const items=DB.items.filter(it=>tieneOcurrenciaEnFecha(it,fecha));
+    const colores=[...new Set(items.map(it=>categoriaPorId(it.categoriaId).color))].slice(0,3);
+    const cls=['cal-day']; if(fecha===hoy) cls.push('hoy'); if(fecha===_calSeleccionado) cls.push('sel');
+    html+='<div class="'+cls.join(' ')+'" onclick="calSeleccionar(\''+fecha+'\')">'+d
+      +'<div class="cal-dots">'+colores.map(c=>'<span style="background:'+c+'"></span>').join('')+'</div></div>';
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+  document.getElementById('cal-dia-lbl').textContent=fmtFechaLarga(_calSeleccionado);
+  const items=DB.items.filter(it=>tieneOcurrenciaEnFecha(it,_calSeleccionado)).map(it=>({item:it,fecha:_calSeleccionado}));
+  ordenarPorHora(items);
+  document.getElementById('cal-dia-lista').innerHTML= items.length
+    ? '<div class="card" style="padding:2px 10px">'+items.map(x=>itemRowHtml(x.item,x.fecha)).join('')+'</div>'
+    : emptyHtml('🗓️','Nada este día','Tocá el + para agregar algo');
+}
+function calSeleccionar(fecha){ _calSeleccionado=fecha; renderCalendario(); }
+
+// ═══════════════════════════════════════════════════════════════
+// PÁGINA BUSCAR
+// ═══════════════════════════════════════════════════════════════
+function renderBuscar(){
+  const q=normalizarTxt(document.getElementById('bu-input').value.trim());
+  const el=document.getElementById('bu-resultados');
+  if(!q){ el.innerHTML=emptyHtml('🔍','Buscá por título o nota','Escribí arriba para filtrar toda tu agenda'); return; }
+  const items=DB.items.filter(it=> normalizarTxt(it.titulo).includes(q) || normalizarTxt(it.notas||'').includes(q) );
+  if(!items.length){ el.innerHTML=emptyHtml('🔍','Sin resultados',''); return; }
+  el.innerHTML='<div class="card" style="padding:2px 10px">'+items.map(it=>itemRowHtml(it,it.fecha)).join('')+'</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MODAL NUEVO/EDITAR ITEM
+// ═══════════════════════════════════════════════════════════════
+let _editId=null, _modTipo='evento', _modCategoriaId=null, _modPrioridad='normal', _modRecurrencia='ninguna', _modChecklist=[];
+function renderModTipoPills(){
+  const tipos=[['evento','📅 Evento'],['tarea','✓ Tarea'],['cumple','🎂 Cumpleaños']];
+  document.getElementById('mod-tipo-pills').innerHTML=tipos.map(([id,label])=>
+    '<button type="button" class="pill '+(id===_modTipo?'sel':'')+'" onclick="setModTipo(\''+id+'\')">'+label+'</button>'
+  ).join('');
+}
+function setModTipo(tipo){
+  _modTipo=tipo;
+  if(tipo==='cumple'){ _modRecurrencia='anual'; document.getElementById('mod-todo-dia').checked=true; }
+  renderModTipoPills(); renderModRecurPills(); toggleModHora();
+  document.getElementById('mod-recur-wrap').style.display = tipo==='cumple' ? 'none' : '';
+  document.getElementById('mod-recur-cumple-nota').style.display = tipo==='cumple' ? '' : 'none';
+}
+function renderModRecurPills(){
+  const opts=[['ninguna','Ninguna'],['diaria','Diaria'],['semanal','Semanal'],['mensual','Mensual'],['anual','Anual']];
+  document.getElementById('mod-recur-pills').innerHTML=opts.map(([id,label])=>
+    '<button type="button" class="pill '+(id===_modRecurrencia?'sel':'')+'" onclick="_modRecurrencia=\''+id+'\';renderModRecurPills()">'+label+'</button>'
+  ).join('');
+}
+function renderModCategoriaPills(){
+  document.getElementById('mod-categoria-pills').innerHTML=DB.categorias.map(c=>
+    '<button type="button" class="pill '+(c.id===_modCategoriaId?'sel':'')+'" onclick="_modCategoriaId=\''+c.id+'\';renderModCategoriaPills()" style="'+(c.id===_modCategoriaId?('background:'+c.color+';color:#06131f;border-color:'+c.color):'')+'"><span style="width:9px;height:9px;border-radius:50%;background:'+c.color+';display:inline-block"></span>'+esc(c.nombre)+'</button>'
+  ).join('');
+}
+function renderModPrioridadPills(){
+  const opts=[['normal','Normal'],['alta','🔴 Alta']];
+  document.getElementById('mod-prioridad-pills').innerHTML=opts.map(([id,label])=>
+    '<button type="button" class="pill '+(id===_modPrioridad?'sel':'')+'" onclick="_modPrioridad=\''+id+'\';renderModPrioridadPills()">'+label+'</button>'
+  ).join('');
+}
+function toggleModHora(){
+  const todoDia=document.getElementById('mod-todo-dia').checked || _modTipo==='cumple';
+  document.getElementById('mod-hora-input-wrap').style.display= todoDia ? 'none' : '';
+  if(_modTipo==='cumple') document.getElementById('mod-todo-dia').checked=true;
+}
+function renderModChecklistList(){
+  const el=document.getElementById('mod-checklist-list');
+  if(!_modChecklist.length){ el.innerHTML=''; return; }
+  el.innerHTML=_modChecklist.map(c=>
+    '<div class="chk-row"><input type="checkbox" '+(c.hecho?'checked':'')+' onchange="toggleModChecklistItem(\''+c.id+'\')">'
+    + '<div class="chk-txt '+(c.hecho?'done':'')+'">'+esc(c.texto)+'</div>'
+    + '<button class="btn-icon" style="width:26px;height:26px;font-size:11px" onclick="quitarModChecklistItem(\''+c.id+'\')">✕</button></div>'
+  ).join('');
+}
+function agregarChecklistItem(){
+  const inp=document.getElementById('mod-checklist-input');
+  const texto=inp.value.trim();
+  if(!texto) return;
+  _modChecklist.push({id:uid(),texto,hecho:false});
+  inp.value='';
+  renderModChecklistList();
+}
+function toggleModChecklistItem(id){ const c=_modChecklist.find(x=>x.id===id); if(c){ c.hecho=!c.hecho; renderModChecklistList(); } }
+function quitarModChecklistItem(id){ _modChecklist=_modChecklist.filter(x=>x.id!==id); renderModChecklistList(); }
+
+function abrirModalItem(id, fechaDefault){
+  const item=id?DB.items.find(i=>i.id===id):null;
+  _editId=item?item.id:null;
+  _modTipo=item?item.tipo:'evento';
+  _modCategoriaId=item?item.categoriaId:DB.categorias[0].id;
+  _modPrioridad=item?item.prioridad:'normal';
+  _modRecurrencia=item?item.recurrencia:'ninguna';
+  _modChecklist=item?JSON.parse(JSON.stringify(item.checklist||[])):[];
+
+  document.getElementById('mod-title').textContent=item?'Editar':'+ Nuevo';
+  document.getElementById('mod-titulo').value=item?item.titulo:'';
+  document.getElementById('mod-fecha').value=item?item.fecha:(fechaDefault||fechaHoy());
+  document.getElementById('mod-todo-dia').checked=item?!item.hora:false;
+  document.getElementById('mod-hora').value=item&&item.hora?item.hora:'';
+  document.getElementById('mod-aviso').value=item&&item.avisoMin!=null?String(item.avisoMin):'';
+  document.getElementById('mod-notas').value=item?(item.notas||''):'';
+  document.getElementById('btn-borrar-item').style.display=item?'':'none';
+
+  renderModTipoPills(); renderModRecurPills(); renderModCategoriaPills(); renderModPrioridadPills(); renderModChecklistList();
+  document.getElementById('mod-recur-wrap').style.display = _modTipo==='cumple' ? 'none' : '';
+  document.getElementById('mod-recur-cumple-nota').style.display = _modTipo==='cumple' ? '' : 'none';
+  toggleModHora();
+  abrirModal('item');
+}
+function guardarItem(){
+  const titulo=document.getElementById('mod-titulo').value.trim();
+  const fecha=document.getElementById('mod-fecha').value;
+  if(!titulo){ toast('⚠️ Ingresá un título'); return; }
+  if(!fecha){ toast('⚠️ Ingresá una fecha'); return; }
+  const todoDia=document.getElementById('mod-todo-dia').checked || _modTipo==='cumple';
+  const hora=todoDia?null:(document.getElementById('mod-hora').value||null);
+  const avisoRaw=document.getElementById('mod-aviso').value;
+  const avisoMin=avisoRaw===''?null:parseInt(avisoRaw);
+  const notas=document.getElementById('mod-notas').value.trim();
+
+  let item=_editId?DB.items.find(i=>i.id===_editId):null;
+  const esNuevo=!item;
+  if(esNuevo) item={id:uid(),hecho:false,completados:{}};
+  item.tipo=_modTipo; item.titulo=titulo; item.fecha=fecha; item.hora=hora;
+  item.recurrencia=_modTipo==='cumple'?'anual':_modRecurrencia;
+  item.categoriaId=_modCategoriaId; item.prioridad=_modPrioridad; item.avisoMin=avisoMin;
+  item.notas=notas; item.checklist=_modChecklist;
+  if(esNuevo) DB.items.push(item);
+
+  const key=item.id+'_'+fecha;
+  delete DB.notificados[key];
+
+  save();
+  cerrarModal('item');
+  rerenderPaginaActual();
+  toast(esNuevo?'✅ Agregado':'✅ Guardado');
+}
+function borrarItem(){
+  if(!_editId||!confirm('¿Borrar este ítem?')) return;
+  DB.items=DB.items.filter(i=>i.id!==_editId);
+  save();
+  cerrarModal('item');
+  rerenderPaginaActual();
+  toast('🗑 Borrado');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PÁGINA MÁS — categorías, notificaciones, backup
+// ═══════════════════════════════════════════════════════════════
+let _catColorSel=PALETA[0];
+function renderCatSwatches(){
+  document.getElementById('cat-swatches').innerHTML=PALETA.map(c=>
+    '<div class="swatch '+(c===_catColorSel?'sel':'')+'" style="background:'+c+'" onclick="_catColorSel=\''+c+'\';renderCatSwatches()"></div>'
+  ).join('');
+}
+function crearCategoria(){
+  const nombre=document.getElementById('cat-nombre').value.trim();
+  if(!nombre){ toast('⚠️ Ingresá un nombre'); return; }
+  DB.categorias.push({id:uid(),nombre,color:_catColorSel});
+  save();
+  document.getElementById('cat-nombre').value='';
+  renderMas();
+  toast('✅ Categoría agregada');
+}
+function borrarCategoria(id){
+  if(DB.categorias.length<=1){ toast('⚠️ Tiene que quedar al menos una categoría'); return; }
+  if(!confirm('¿Borrar esta categoría? Los ítems que la usan van a quedar con la primera categoría disponible.')) return;
+  DB.categorias=DB.categorias.filter(c=>c.id!==id);
+  const fallback=DB.categorias[0].id;
+  DB.items.forEach(it=>{ if(it.categoriaId===id) it.categoriaId=fallback; });
+  save();
+  renderMas();
+  rerenderPaginaActual();
+}
+function renderMas(){
+  document.getElementById('mas-categorias-card').innerHTML=DB.categorias.map(c=>
+    '<div class="cat-row"><div class="cat-dot" style="background:'+c.color+'"></div><div class="cat-nombre">'+esc(c.nombre)+'</div>'
+    + '<button class="btn-icon" style="width:28px;height:28px;font-size:12px" onclick="borrarCategoria(\''+c.id+'\')">✕</button></div>'
+  ).join('');
+  renderCatSwatches();
+
+  const estadoEl=document.getElementById('mas-notif-estado');
+  if(!('Notification' in window)) estadoEl.textContent='Este navegador no soporta notificaciones.';
+  else if(Notification.permission==='granted') estadoEl.textContent='✅ Activadas — vas a recibir aviso escrito y sonido cuando la app esté abierta o recién cerrada.';
+  else if(Notification.permission==='denied') estadoEl.textContent='🚫 Bloqueadas por el navegador. Activalas desde la configuración del sitio en tu celular.';
+  else estadoEl.textContent='Todavía no están activadas.';
+}
+
+function exportarBackup(){
+  const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='frigurso-agenda-backup-'+fechaHoy()+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('⬇️ Backup descargado');
+}
+function importarBackup(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!Array.isArray(data.items)) throw new Error('formato inválido');
+      if(!confirm('Esto va a reemplazar todos los datos actuales por los del archivo. ¿Continuar?')) return;
+      DB=data;
+      if(!DB.categorias||!DB.categorias.length) DB.categorias=categoriasDefault();
+      if(!DB.notificados) DB.notificados={};
+      if(!DB.snooze) DB.snooze={};
+      save();
+      renderMas(); rerenderPaginaActual();
+      toast('✅ Backup importado');
+    }catch(e){ toast('⚠️ Archivo inválido'); }
+  };
+  reader.readAsText(file);
+  ev.target.value='';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RECORDATORIOS — sonido (Web Audio, sin archivos) + aviso escrito
+// (banner en la app + notificación del sistema si hay permiso).
+// Sin backend no hay push real: esto funciona de forma confiable
+// mientras la app está abierta o recién en segundo plano; ver nota
+// en Más.
+// ═══════════════════════════════════════════════════════════════
+function beep(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    function tono(freq,delayMs,dur){
+      setTimeout(()=>{
+        try{
+          const o=ctx.createOscillator(), g=ctx.createGain();
+          o.connect(g); g.connect(ctx.destination);
+          o.type='sine'; o.frequency.value=freq;
+          g.gain.setValueAtTime(0.0001,ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.3,ctx.currentTime+0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+dur);
+          o.start(); o.stop(ctx.currentTime+dur+0.02);
+        }catch(e){}
+      },delayMs);
+    }
+    tono(880,0,0.35); tono(1108,180,0.3);
+  }catch(e){}
+}
+function activarNotificaciones(){
+  if(!('Notification' in window)){ toast('⚠️ Sin soporte de notificaciones'); return; }
+  Notification.requestPermission().then(()=>{ renderMas(); toast(Notification.permission==='granted'?'🔔 Activadas':'No se activaron'); });
+}
+function probarRecordatorio(){ dispararRecordatorio({id:'test',titulo:'Recordatorio de prueba',tipo:'evento',hora:null}, fechaHoy(), true); }
+
+let _bannerActivo=null;
+function dispararRecordatorio(item, fecha, esPrueba){
+  beep();
+  const cuerpo=item.titulo+(item.hora?(' · '+item.hora):'');
+  if(!esPrueba) toast('🔔 '+item.titulo);
+  if('Notification' in window && Notification.permission==='granted' && navigator.serviceWorker){
+    navigator.serviceWorker.ready.then(reg=>{
+      reg.showNotification('Frigurso Agenda', {
+        body:cuerpo, icon:'icon-192.png', badge:'icon-192.png',
+        vibrate:[200,100,200], tag:item.id+'_'+fecha, requireInteraction:true,
+      });
+    }).catch(()=>{});
+  }
+  if(!esPrueba){
+    _bannerActivo={id:item.id,fecha};
+    document.getElementById('br-titulo').textContent='🔔 '+item.titulo;
+    document.getElementById('br-sub').textContent=item.hora?('Hoy · '+item.hora):'Hoy';
+    document.getElementById('banner-record').classList.add('show');
+  }
+}
+function bannerListo(){
+  if(_bannerActivo){
+    const item=DB.items.find(i=>i.id===_bannerActivo.id);
+    if(item&&item.tipo==='tarea'){ marcarHecho(item,_bannerActivo.fecha,true); save(); rerenderPaginaActual(); }
+  }
+  bannerCerrar();
+}
+function bannerPosponer(min){
+  if(_bannerActivo){
+    const key=_bannerActivo.id+'_'+_bannerActivo.fecha;
+    DB.snooze[key]=Date.now()+min*60000;
+    delete DB.notificados[key];
+    save();
+    toast('⏰ Pospuesto '+(min<60?(min+' min'):((min/60)+' hora'+(min>60?'s':'')))+'');
+  }
+  bannerCerrar();
+}
+function bannerCerrar(){ document.getElementById('banner-record').classList.remove('show'); _bannerActivo=null; }
+
+function checkRecordatorios(){
+  const ahora=new Date();
+  const desde=sumarDias(fechaHoy(),-1);
+  const hasta=sumarDias(fechaHoy(),2);
+  let huboCambios=false;
+  DB.items.forEach(item=>{
+    const tieneSnoozeActivo=Object.keys(DB.snooze).some(k=>k.startsWith(item.id+'_'));
+    if(item.avisoMin==null && !tieneSnoozeActivo) return;
+    ocurrenciasEnRango(item,desde,hasta).forEach(fecha=>{
+      if(item.tipo==='tarea' && estaHecho(item,fecha)) return;
+      const key=item.id+'_'+fecha;
+      if(DB.notificados[key]) return;
+      let trigger=null;
+      if(DB.snooze[key]) trigger=new Date(DB.snooze[key]);
+      else if(item.avisoMin!=null){
+        const base=item.hora ? new Date(fecha+'T'+item.hora+':00') : new Date(fecha+'T09:00:00');
+        trigger=new Date(base.getTime()-item.avisoMin*60000);
+      }
+      if(!trigger) return;
+      const limite=new Date(trigger.getTime()+90*60000);
+      if(ahora>=trigger && ahora<=limite){
+        dispararRecordatorio(item,fecha);
+        DB.notificados[key]=true;
+        delete DB.snooze[key];
+        huboCambios=true;
+      }
+    });
+  });
+  if(huboCambios) save();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SERVICE WORKER
+// ═══════════════════════════════════════════════════════════════
+function forzarUpdate(){
+  if(!navigator.serviceWorker) return;
+  navigator.serviceWorker.getRegistration().then(reg=>{
+    if(reg&&reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
+    else toast('Ya tenés la última versión');
+  });
+}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(()=>{
+    let refrescando=false;
+    navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+      if(refrescando) return; refrescando=true; location.reload();
+    });
+  }).catch(()=>{});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+function iniciarApp(){
+  cargarDB();
+  calInit();
+  document.getElementById('navbar').style.display='';
+  navGo('hoy', document.getElementById('nav-hoy'));
+  history.replaceState({page:'hoy'},'','');
+  checkRecordatorios();
+  setInterval(checkRecordatorios, 30000);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkRecordatorios(); });
+}
+iniciarApp();
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// IDENTIDAD FRIGURSO — traba de privacidad simple, independiente del
+// resto de la app. No cifra datos, solo tapa la vista hasta que se
+// pone la contraseña. El desbloqueo es una acción del usuario, no
+// un timer, así que si esto tarda en cargar el peor caso es que el
+// botón no responda todavía — nunca queda trabado en silencio. Se
+// recuerda el desbloqueo durante la sesión (sessionStorage) para que
+// una recarga (ej. deslizar para actualizar) no vuelva a pedirla.
+// ═══════════════════════════════════════════════════════════════
+function fgErr(id, msg){ const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; }
+function fgHideErr(id){ document.getElementById(id).style.display = 'none'; }
+async function _hashPass(pass){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function fgOcultarLock(){
+  document.getElementById('fg-lock').style.display = 'none';
+  try{ localStorage.setItem('agenda_unlocked','1'); }catch(e){}
+}
+function fgMostrarLock(){
+  try{ localStorage.removeItem('agenda_unlocked'); }catch(e){}
+  document.getElementById('lk-pass-in').value = '';
+  fgHideErr('lk-ing-err');
+  document.getElementById('fg-lock').style.display = 'flex';
+}
+async function fgCrearAcceso(){
+  fgHideErr('lk-crear-err');
+  const p1 = document.getElementById('lk-pass').value;
+  const p2 = document.getElementById('lk-pass2').value;
+  if(!p1 || p1.length<4){ fgErr('lk-crear-err','Mínimo 4 caracteres'); return; }
+  if(p1!==p2){ fgErr('lk-crear-err','Las contraseñas no coinciden'); return; }
+  localStorage.setItem('agenda_pass_hash', await _hashPass(p1));
+  fgOcultarLock();
+}
+async function fgIngresarAcceso(){
+  fgHideErr('lk-ing-err');
+  const p = document.getElementById('lk-pass-in').value;
+  if((await _hashPass(p)) === localStorage.getItem('agenda_pass_hash')){
+    fgOcultarLock();
+  } else {
+    fgErr('lk-ing-err','Contraseña incorrecta');
+  }
+}
+function fgOlvideAcceso(){
+  if(!confirm('Vamos a borrar la contraseña de este celular para que puedas entrar de nuevo. Tus datos NO se borran.\n\n¿Continuar?')) return;
+  localStorage.removeItem('agenda_pass_hash');
+  location.reload();
+}
+if(localStorage.getItem('agenda_pass_hash')){
+  document.getElementById('lk-crear').style.display = 'none';
+  document.getElementById('lk-ingresar').style.display = 'block';
+  let yaDesbloqueado = false;
+  try{ yaDesbloqueado = localStorage.getItem('agenda_unlocked') === '1'; }catch(e){}
+  if(yaDesbloqueado) fgOcultarLock();
+}
+</script>
+</body>
+</html>
