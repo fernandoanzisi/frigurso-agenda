@@ -60,6 +60,13 @@
   .chip-resumen.ok{background:rgba(61,220,132,.14);color:var(--green);border-color:rgba(61,220,132,.35)}
   .dia-subhead{font-size:12px;font-weight:800;color:var(--text2);text-transform:capitalize;margin:12px 4px 6px}
 
+  .filtro-row{display:flex;gap:6px;overflow-x:auto;padding:10px 2px 4px;-webkit-overflow-scrolling:touch}
+  .filtro-row::-webkit-scrollbar{display:none}
+  .pill-filtro{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid var(--border);background:var(--bg3);color:var(--text3)}
+  .pill-filtro .fdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .pill-filtro.activo{color:var(--text)}
+  .btn-share{width:100%;padding:12px;border-radius:14px;background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;border:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px}
+
   .cumples-strip{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin-bottom:4px}
   .cumple-chip{flex-shrink:0;background:linear-gradient(135deg,rgba(197,139,255,.18),rgba(197,139,255,.05));border:1px solid rgba(197,139,255,.35);border-radius:14px;padding:10px 14px;min-width:110px}
   .cumple-chip .cc-nom{font-size:13px;font-weight:800;color:var(--purple)}
@@ -206,7 +213,7 @@
   <div class="header-title">📋 Frigurso Agenda</div>
   <div class="header-sub" id="hoy-sub">—</div>
   <div class="resumen-chips" id="hoy-resumen"></div>
-  <div style="height:6px"></div>
+  <div class="filtro-row" id="hoy-filtro"></div>
 
   <div class="quick-add">
     <input type="text" class="input" id="qa-input" placeholder="Ej: mañana 15hs dentista" onkeydown="if(event.key==='Enter')agregarRapido()">
@@ -221,7 +228,7 @@
 <!-- ══════════ CALENDARIO ══════════ -->
 <div class="page" id="page-calendario">
   <div class="header-title">📅 Calendario</div>
-  <div style="height:10px"></div>
+  <div class="filtro-row" id="cal-filtro"></div>
   <div class="cal-nav">
     <button class="btn-icon" onclick="calMoverMes(-1)">←</button>
     <div class="cal-mes" id="cal-mes-lbl">—</div>
@@ -236,7 +243,7 @@
 <!-- ══════════ BUSCAR ══════════ -->
 <div class="page" id="page-buscar">
   <div class="header-title">🔍 Buscar</div>
-  <div style="height:10px"></div>
+  <div class="filtro-row" id="bu-filtro"></div>
   <input type="text" class="input" id="bu-input" placeholder="Buscar por título o nota..." oninput="renderBuscar()">
   <div style="height:12px"></div>
   <div id="bu-resultados"></div>
@@ -263,18 +270,22 @@
     <button class="btn-ghost" style="margin-bottom:0" onclick="probarRecordatorio()">🔊 Probar sonido y aviso</button>
   </div>
   <div class="card aviso-box">
-    Los recordatorios suenan mientras la app está abierta o recién en segundo plano. Si el celular estuvo horas con la app cerrada del todo, el aviso puede no sonar justo a tiempo — igual vas a verlo apenas la abras de nuevo. Para lo realmente crítico (vuelos, turnos importantes), usá además una alarma nativa del celular.
+    Los recordatorios suenan mientras la app está abierta o recién en segundo plano. Si el celular estuvo horas con la app cerrada del todo, el aviso puede no sonar justo a tiempo — igual vas a verlo apenas la abras de nuevo. Para lo realmente crítico (vuelos, turnos importantes), tocá "Agregar al calendario del celular" dentro del ítem — esa sí suena aunque la app esté cerrada, porque la maneja el sistema operativo.
   </div>
 
-  <div class="section-title">Copia de seguridad</div>
+  <div class="section-title">Calendario y copia de seguridad</div>
   <div class="card" style="padding:6px 4px">
+    <button class="admin-menu-btn" onclick="exportarICSTodo()">
+      <span class="admin-menu-ic">📅</span>
+      <span class="admin-menu-txt"><span class="admin-menu-titulo">Exportar todo al calendario (.ics)</span><span class="admin-menu-sub">Para importarlo de una en Google/Apple Calendar</span></span>
+    </button>
     <button class="admin-menu-btn" onclick="exportarBackup()">
       <span class="admin-menu-ic">⬇️</span>
-      <span class="admin-menu-txt"><span class="admin-menu-titulo">Exportar</span><span class="admin-menu-sub">Descarga un archivo .json con toda tu agenda</span></span>
+      <span class="admin-menu-txt"><span class="admin-menu-titulo">Exportar backup</span><span class="admin-menu-sub">Descarga un archivo .json con toda tu agenda</span></span>
     </button>
     <button class="admin-menu-btn" onclick="document.getElementById('import-file').click()">
       <span class="admin-menu-ic">⬆️</span>
-      <span class="admin-menu-txt"><span class="admin-menu-titulo">Importar</span><span class="admin-menu-sub">Reemplaza los datos actuales por los del archivo</span></span>
+      <span class="admin-menu-txt"><span class="admin-menu-titulo">Importar backup</span><span class="admin-menu-sub">Reemplaza los datos actuales por los del archivo</span></span>
     </button>
     <input type="file" id="import-file" accept="application/json" style="display:none" onchange="importarBackup(event)">
   </div>
@@ -361,6 +372,10 @@
     <div class="field-wrap"><div class="field-label">Notas (opcional)</div><textarea class="input" id="mod-notas" placeholder=""></textarea></div>
 
     <button class="btn-primary" onclick="guardarItem()">Guardar</button>
+    <div id="mod-share-wrap" style="display:none">
+      <button class="btn-share" onclick="exportarICSItem(_editId)">📅 Agregar al calendario del celular</button>
+      <button class="btn-share" onclick="enviarPorWhatsapp(_editId)">📲 Recordarle a alguien por WhatsApp</button>
+    </div>
     <button class="btn-danger" id="btn-borrar-item" onclick="borrarItem()" style="display:none">🗑 Borrar</button>
     <button class="btn-ghost" onclick="cerrarModal('item')">Cancelar</button>
   </div>
@@ -409,6 +424,20 @@ function categoriasDefault(){
   ];
 }
 function categoriaPorId(id){ return DB.categorias.find(c=>c.id===id) || DB.categorias[0] || {id:'personal',nombre:'Personal',color:'#5fb0e8'}; }
+
+// ═══════════════════════════════════════════════════════════════
+// FILTRO POR CATEGORÍA (Hoy / Calendario / Buscar)
+// ═══════════════════════════════════════════════════════════════
+let _catFiltro=null; // null = sin filtro, se ven todas
+function pasaFiltro(item){ return _catFiltro===null || item.categoriaId===_catFiltro; }
+function toggleCatFiltro(id){ _catFiltro=(_catFiltro===id)?null:id; rerenderPaginaActual(); }
+function filtroCategoriasHtml(){
+  return DB.categorias.map(c=>{
+    const activo=_catFiltro===c.id;
+    const estilo=activo?('background:'+c.color+'26;color:'+c.color+';border-color:'+c.color+'88'):'';
+    return '<button type="button" class="pill-filtro'+(activo?' activo':'')+'" style="'+estilo+'" onclick="toggleCatFiltro(\''+c.id+'\')"><span class="fdot" style="background:'+c.color+'"></span>'+esc(c.nombre)+'</button>';
+  }).join('');
+}
 
 // ═══════════════════════════════════════════════════════════════
 // DB / PERSISTENCIA (localStorage plano, sin cifrar — ver candado más abajo)
@@ -652,21 +681,22 @@ function renderHoy(){
   const inicioProx=sumarDias(hoy,2);
   const finSemana=sumarDias(hoy,7);
   document.getElementById('hoy-sub').textContent=fmtFechaLarga(hoy);
+  document.getElementById('hoy-filtro').innerHTML=filtroCategoriasHtml();
 
-  const vencidos=DB.items.filter(it=>it.tipo==='tarea'&&it.recurrencia==='ninguna'&&it.fecha<hoy&&!it.hecho)
+  const vencidos=DB.items.filter(it=>it.tipo==='tarea'&&it.recurrencia==='ninguna'&&it.fecha<hoy&&!it.hecho&&pasaFiltro(it))
     .map(it=>({item:it,fecha:it.fecha}));
   ordenarPorHora(vencidos);
 
-  const grupoHoy=[]; DB.items.forEach(it=>ocurrenciasEnRango(it,hoy,hoy).forEach(fecha=>grupoHoy.push({item:it,fecha})));
+  const grupoHoy=[]; DB.items.filter(pasaFiltro).forEach(it=>ocurrenciasEnRango(it,hoy,hoy).forEach(fecha=>grupoHoy.push({item:it,fecha})));
   ordenarPorHora(grupoHoy);
-  const grupoManana=[]; DB.items.forEach(it=>ocurrenciasEnRango(it,manana,manana).forEach(fecha=>grupoManana.push({item:it,fecha})));
+  const grupoManana=[]; DB.items.filter(pasaFiltro).forEach(it=>ocurrenciasEnRango(it,manana,manana).forEach(fecha=>grupoManana.push({item:it,fecha})));
   ordenarPorHora(grupoManana);
 
   // Días siguientes agrupados por fecha real: un ítem que se repite todos
   // los días aparece una sola vez bajo cada subtítulo de día, no amontonado
   // en una sola lista sin fecha (eso generaba el título repetido muchas veces).
   const porFecha={};
-  DB.items.forEach(it=>{
+  DB.items.filter(pasaFiltro).forEach(it=>{
     ocurrenciasEnRango(it,inicioProx,finSemana).forEach(fecha=>{
       (porFecha[fecha]=porFecha[fecha]||[]).push({item:it,fecha});
     });
@@ -697,7 +727,7 @@ function renderHoy(){
   }
   document.getElementById('hoy-listas').innerHTML=html;
 
-  const cumpleItems=DB.items.filter(it=>it.tipo==='cumple');
+  const cumpleItems=DB.items.filter(it=>it.tipo==='cumple'&&pasaFiltro(it));
   const proximos=[];
   cumpleItems.forEach(it=>{
     ocurrenciasEnRango(it,hoy,sumarDias(hoy,14)).forEach(fecha=>proximos.push({item:it,fecha}));
@@ -735,6 +765,7 @@ function calMoverMes(delta){
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DIAS_CORTOS=['L','M','M','J','V','S','D'];
 function renderCalendario(){
+  document.getElementById('cal-filtro').innerHTML=filtroCategoriasHtml();
   document.getElementById('cal-mes-lbl').textContent=MESES[_calMonth]+' '+_calYear;
   const primero=new Date(_calYear,_calMonth,1);
   const diasEnMes=new Date(_calYear,_calMonth+1,0).getDate();
@@ -744,7 +775,7 @@ function renderCalendario(){
   for(let i=0;i<offset;i++) html+='<div class="cal-day blank"></div>';
   for(let d=1;d<=diasEnMes;d++){
     const fecha=`${_calYear}-${pad(_calMonth+1)}-${pad(d)}`;
-    const items=DB.items.filter(it=>tieneOcurrenciaEnFecha(it,fecha));
+    const items=DB.items.filter(it=>pasaFiltro(it)&&tieneOcurrenciaEnFecha(it,fecha));
     const colores=[...new Set(items.map(it=>categoriaPorId(it.categoriaId).color))].slice(0,3);
     const cls=['cal-day']; if(fecha===hoy) cls.push('hoy'); if(fecha===_calSeleccionado) cls.push('sel');
     html+='<div class="'+cls.join(' ')+'" onclick="calSeleccionar(\''+fecha+'\')">'+d
@@ -752,7 +783,7 @@ function renderCalendario(){
   }
   document.getElementById('cal-grid').innerHTML=html;
   document.getElementById('cal-dia-lbl').textContent=fmtFechaLarga(_calSeleccionado);
-  const items=DB.items.filter(it=>tieneOcurrenciaEnFecha(it,_calSeleccionado)).map(it=>({item:it,fecha:_calSeleccionado}));
+  const items=DB.items.filter(it=>pasaFiltro(it)&&tieneOcurrenciaEnFecha(it,_calSeleccionado)).map(it=>({item:it,fecha:_calSeleccionado}));
   ordenarPorHora(items);
   document.getElementById('cal-dia-lista').innerHTML= items.length
     ? '<div class="card" style="padding:2px 10px">'+items.map(x=>itemRowHtml(x.item,x.fecha)).join('')+'</div>'
@@ -764,10 +795,11 @@ function calSeleccionar(fecha){ _calSeleccionado=fecha; renderCalendario(); }
 // PÁGINA BUSCAR
 // ═══════════════════════════════════════════════════════════════
 function renderBuscar(){
+  document.getElementById('bu-filtro').innerHTML=filtroCategoriasHtml();
   const q=normalizarTxt(document.getElementById('bu-input').value.trim());
   const el=document.getElementById('bu-resultados');
   if(!q){ el.innerHTML=emptyHtml('🔍','Buscá por título o nota','Escribí arriba para filtrar toda tu agenda'); return; }
-  const items=DB.items.filter(it=> normalizarTxt(it.titulo).includes(q) || normalizarTxt(it.notas||'').includes(q) );
+  const items=DB.items.filter(it=> pasaFiltro(it) && (normalizarTxt(it.titulo).includes(q) || normalizarTxt(it.notas||'').includes(q)) );
   if(!items.length){ el.innerHTML=emptyHtml('🔍','Sin resultados',''); return; }
   el.innerHTML='<div class="card" style="padding:2px 10px">'+items.map(it=>itemRowHtml(it,it.fecha)).join('')+'</div>';
 }
@@ -848,6 +880,7 @@ function abrirModalItem(id, fechaDefault){
   document.getElementById('mod-aviso').value=item&&item.avisoMin!=null?String(item.avisoMin):'';
   document.getElementById('mod-notas').value=item?(item.notas||''):'';
   document.getElementById('btn-borrar-item').style.display=item?'':'none';
+  document.getElementById('mod-share-wrap').style.display=item?'':'none';
 
   renderModTipoPills(); renderModRecurPills(); renderModCategoriaPills(); renderModPrioridadPills(); renderModChecklistList();
   document.getElementById('mod-recur-wrap').style.display = _modTipo==='cumple' ? 'none' : '';
@@ -916,6 +949,7 @@ function borrarCategoria(id){
   DB.categorias=DB.categorias.filter(c=>c.id!==id);
   const fallback=DB.categorias[0].id;
   DB.items.forEach(it=>{ if(it.categoriaId===id) it.categoriaId=fallback; });
+  if(_catFiltro===id) _catFiltro=null;
   save();
   renderMas();
   rerenderPaginaActual();
@@ -934,14 +968,81 @@ function renderMas(){
   else estadoEl.textContent='Todavía no están activadas.';
 }
 
-function exportarBackup(){
-  const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+function descargarArchivo(contenido,nombre,tipo){
+  const blob=new Blob([contenido],{type:tipo});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url; a.download='frigurso-agenda-backup-'+fechaHoy()+'.json';
+  a.href=url; a.download=nombre;
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
+}
+function exportarBackup(){
+  descargarArchivo(JSON.stringify(DB,null,2), 'frigurso-agenda-backup-'+fechaHoy()+'.json', 'application/json');
   toast('⬇️ Backup descargado');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORTAR A CALENDARIO NATIVO (.ics) — para que el evento tenga una
+// alarma real del sistema operativo, aunque la app esté cerrada.
+// ═══════════════════════════════════════════════════════════════
+function icsEscape(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); }
+function icsFechaHora(fecha,hora){ const [y,m,d]=fecha.split('-'); const [hh,mm]=hora.split(':'); return `${y}${m}${d}T${hh}${mm}00`; }
+function icsFechaSolo(fecha){ return fecha.replace(/-/g,''); }
+function icsRRULE(item){
+  const map={diaria:'DAILY',semanal:'WEEKLY',mensual:'MONTHLY',anual:'YEARLY'};
+  return map[item.recurrencia] ? 'RRULE:FREQ='+map[item.recurrencia]+'\r\n' : '';
+}
+function icsVEVENT(item){
+  let dtstart,dtend;
+  if(item.hora){
+    dtstart='DTSTART:'+icsFechaHora(item.fecha,item.hora);
+    let [hh,mm]=item.hora.split(':').map(Number);
+    let endH=hh+1, endD=item.fecha;
+    if(endH>=24){ endH-=24; endD=sumarDias(item.fecha,1); }
+    dtend='DTEND:'+icsFechaHora(endD,pad(endH)+':'+pad(mm));
+  } else {
+    dtstart='DTSTART;VALUE=DATE:'+icsFechaSolo(item.fecha);
+    dtend='DTEND;VALUE=DATE:'+icsFechaSolo(sumarDias(item.fecha,1));
+  }
+  let alarm='';
+  if(item.avisoMin!=null){
+    alarm='BEGIN:VALARM\r\nTRIGGER:'+(item.avisoMin>0?('-PT'+item.avisoMin+'M'):'PT0M')+'\r\nACTION:DISPLAY\r\nDESCRIPTION:'+icsEscape(item.titulo)+'\r\nEND:VALARM\r\n';
+  }
+  return 'BEGIN:VEVENT\r\nUID:'+item.id+'@frigurso-agenda\r\n'
+    +'DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z\r\n'
+    +dtstart+'\r\n'+dtend+'\r\n'
+    +'SUMMARY:'+icsEscape((item.tipo==='cumple'?'🎂 ':'')+item.titulo)+'\r\n'
+    +(item.notas?('DESCRIPTION:'+icsEscape(item.notas)+'\r\n'):'')
+    +icsRRULE(item)+alarm+'END:VEVENT\r\n';
+}
+function exportarICSItem(id){
+  const item=DB.items.find(i=>i.id===id); if(!item) return;
+  const contenido='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Frigurso Agenda//ES\r\nCALSCALE:GREGORIAN\r\n'+icsVEVENT(item)+'END:VCALENDAR\r\n';
+  descargarArchivo(contenido,(item.titulo.replace(/[^a-z0-9]+/gi,'_')||'evento')+'.ics','text/calendar');
+  toast('📅 Descargado — abrilo para agregarlo a tu calendario');
+}
+function exportarICSTodo(){
+  if(!DB.items.length){ toast('⚠️ No hay nada para exportar'); return; }
+  const cuerpo=DB.items.map(icsVEVENT).join('');
+  const contenido='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Frigurso Agenda//ES\r\nCALSCALE:GREGORIAN\r\n'+cuerpo+'END:VCALENDAR\r\n';
+  descargarArchivo(contenido,'frigurso-agenda-'+fechaHoy()+'.ics','text/calendar');
+  toast('📅 Agenda completa descargada');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RECORDARLE A ALGUIEN POR WHATSAPP — genera el mensaje y abre
+// WhatsApp con el texto listo; el contacto lo elige la persona ahí.
+// ═══════════════════════════════════════════════════════════════
+function mensajeRecordatorioWhatsapp(item){
+  const cat=categoriaPorId(item.categoriaId);
+  const cuando=fmtFechaLarga(item.fecha)+(item.hora?(' a las '+item.hora):'');
+  let txt='🔔 Recordatorio de Frigurso Agenda:\n*'+item.titulo+'*\n📅 '+cuando+'\n🏷️ '+cat.nombre;
+  if(item.notas) txt+='\n📝 '+item.notas;
+  return txt;
+}
+function enviarPorWhatsapp(id){
+  const item=DB.items.find(i=>i.id===id); if(!item) return;
+  window.open('https://wa.me/?text='+encodeURIComponent(mensajeRecordatorioWhatsapp(item)),'_blank');
 }
 function importarBackup(ev){
   const file=ev.target.files[0]; if(!file) return;
