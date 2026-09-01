@@ -12,7 +12,7 @@
   :root{
     --bg:#0a1120;--bg2:#0e1830;--bg3:#15213c;--card:#111c33;--border:#1e2c4a;
     --text:#eef2fa;--text2:#a8b6d4;--text3:#66748f;
-    --accent:#f2a93b;--accent-ink:#241400;--accent2:#ffce6b;--green:#3ddc84;--red:#f66a6a;--purple:#c58bff;
+    --accent:#9b72cb;--accent-ink:#ffffff;--accent2:#e8618c;--accent-grad:linear-gradient(135deg,#4285f4 0%,#9b72cb 55%,#e8618c 100%);--accent-shadow:rgba(155,114,203,.55);--green:#3ddc84;--red:#f66a6a;--purple:#c58bff;
     --mono:'SF Mono',ui-monospace,Menlo,monospace;
     --shadow:0 10px 30px -12px rgba(0,0,0,.5);
     --sab:env(safe-area-inset-bottom,0px);--sat:env(safe-area-inset-top,0px);
@@ -32,7 +32,7 @@
   textarea.input{resize:vertical;min-height:60px}
   .field-wrap{margin-bottom:12px}
   .field-label{font-size:12px;color:var(--text3);margin-bottom:6px;font-weight:600}
-  .btn-primary{width:100%;padding:14px;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-size:15px;font-weight:800;border:none;margin-bottom:8px}
+  .btn-primary{width:100%;padding:14px;border-radius:14px;background:var(--accent-grad);color:var(--accent-ink);font-size:15px;font-weight:800;border:none;margin-bottom:8px}
   .btn-danger{width:100%;padding:13px;border-radius:14px;background:rgba(246,106,106,.12);color:var(--red);font-size:14px;font-weight:700;border:1px solid rgba(246,106,106,.3);margin-bottom:8px}
   .btn-ghost{width:100%;padding:12px;border-radius:14px;background:transparent;color:var(--text3);font-size:13px;font-weight:600;border:none}
   .btn-icon{width:34px;height:34px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
@@ -41,9 +41,9 @@
   .row-title{font-size:14px;font-weight:700}
   .row-sub{font-size:12px;color:var(--text3);margin-top:1px}
   .pill{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:99px;font-size:13px;font-weight:700;border:1px solid var(--border);background:var(--bg3);color:var(--text2)}
-  .pill.sel{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .pill.sel{background:var(--accent-grad);color:var(--accent-ink);border-color:var(--accent)}
   .pill-sel{display:flex;flex-wrap:wrap;gap:8px}
-  .toast{position:fixed;bottom:calc(20px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:var(--accent-ink);padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;transition:all .25s;z-index:9999;white-space:nowrap;pointer-events:none;max-width:88vw;overflow:hidden;text-overflow:ellipsis}
+  .toast{position:fixed;bottom:calc(20px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent-grad);color:var(--accent-ink);padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;transition:all .25s;z-index:9999;white-space:nowrap;pointer-events:none;max-width:88vw;overflow:hidden;text-overflow:ellipsis}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .empty{padding:30px 4px;text-align:center;color:var(--text3);font-size:13px}
   .empty-icon{font-size:34px;margin-bottom:8px}
@@ -64,7 +64,7 @@
   .nav-btn .ni{font-size:21px}
   .nav-btn.active{color:var(--accent)}
 
-  .fab{position:fixed;right:16px;bottom:calc(74px + var(--sab));z-index:90;width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:26px;border:none;box-shadow:0 8px 20px -6px rgba(242,169,59,.6);display:flex;align-items:center;justify-content:center}
+  .fab{position:fixed;right:16px;bottom:calc(74px + var(--sab));z-index:90;width:56px;height:56px;border-radius:50%;background:var(--accent-grad);color:var(--accent-ink);font-size:26px;border:none;box-shadow:0 8px 20px -6px var(--accent-shadow);display:flex;align-items:center;justify-content:center}
 
   .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(5,9,18,.72);display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s}
   .modal-overlay.open{opacity:1;pointer-events:auto}
@@ -100,7 +100,7 @@
   .cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;font-size:13px;font-weight:700;color:var(--text2);position:relative;background:var(--bg3);cursor:pointer}
   .cal-day.blank{background:transparent;cursor:default}
   .cal-day.hoy{border:1.5px solid var(--accent)}
-  .cal-day.sel{background:var(--accent);color:var(--accent-ink)}
+  .cal-day.sel{background:var(--accent-grad);color:var(--accent-ink)}
   .cal-dots{display:flex;gap:2px;position:absolute;bottom:4px}
   .cal-dots span{width:4px;height:4px;border-radius:50%}
 
@@ -110,7 +110,7 @@
   .banner-record .br-sub{font-size:12px;color:var(--text3);margin-bottom:10px}
   .banner-record .br-btns{display:flex;gap:6px;flex-wrap:wrap}
   .banner-record .br-btns button{flex:1;min-width:70px;padding:8px 6px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:11px;font-weight:700}
-  .banner-record .br-btns button.principal{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .banner-record .br-btns button.principal{background:var(--accent-grad);color:var(--accent-ink);border-color:var(--accent)}
 
 /* ═══════════════════════════════════════════════════════════════
    IDENTIDAD FRIGURSO — splash (puro CSS, se va solo) + traba de
@@ -203,7 +203,7 @@
 
   <div class="quick-add">
     <input type="text" class="input" id="qa-input" placeholder="Ej: mañana 15hs dentista" onkeydown="if(event.key==='Enter')agregarRapido()">
-    <button class="btn-icon" style="width:48px;height:48px;font-size:20px;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)" onclick="agregarRapido()">＋</button>
+    <button class="btn-icon" style="width:48px;height:48px;font-size:20px;background:var(--accent-grad);color:var(--accent-ink);border-color:var(--accent)" onclick="agregarRapido()">＋</button>
   </div>
   <div class="quick-hint">Escribí y Enter. Entiende "hoy", "mañana", días ("lunes"), "cada lunes", horarios ("15hs", "15:30", "3pm").</div>
 
