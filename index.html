@@ -3,30 +3,53 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<meta name="theme-color" content="#151d33">
+<meta name="theme-color" content="#131316">
 <title>Frigurso Agenda</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<script>
+// Se aplica ANTES del CSS para que no haya flash del tema equivocado al abrir.
+(function(){
+  try{ document.documentElement.setAttribute('data-theme', localStorage.getItem('agenda_tema')||'auto'); }
+  catch(e){ document.documentElement.setAttribute('data-theme','auto'); }
+})();
+</script>
 <style>
   :root{
-    --bg:#151d33;--bg2:#1a2340;--bg3:#26315a;--card:#1f2947;--border:#384876;
-    --text:#f7f9fd;--text2:#c2cce6;--text3:#93a1c4;
-    --accent:#9b72cb;--accent-ink:#ffffff;--accent2:#e8618c;--accent-grad:linear-gradient(135deg,#4285f4 0%,#9b72cb 55%,#e8618c 100%);--accent-shadow:rgba(155,114,203,.55);--green:#3ddc84;--red:#f66a6a;--purple:#c58bff;
+    /* Oscuro gris neutro (default) — sin el tinte navy de antes */
+    --bg:#131316;--bg2:#1a1a1f;--bg3:#232329;--card:#1c1c21;--border:#2c2d33;
+    --text:#f2f2f5;--text2:#c7c7cf;--text3:#8f8f99;
+    --accent:#9b72cb;--accent-ink:#ffffff;--accent2:#e8618c;--accent-grad:linear-gradient(135deg,#4285f4 0%,#9b72cb 55%,#e8618c 100%);--accent-shadow:rgba(155,114,203,.45);--green:#3ddc84;--red:#f66a6a;--purple:#c58bff;
     --mono:'SF Mono',ui-monospace,Menlo,monospace;
-    --shadow:0 10px 30px -12px rgba(0,0,0,.38);
+    --shadow:0 10px 26px -14px rgba(0,0,0,.5);
     --sab:env(safe-area-inset-bottom,0px);--sat:env(safe-area-inset-top,0px);
+  }
+  :root[data-theme="light"]{
+    /* Gemini claro */
+    --bg:#f6f7fb;--bg2:#ffffff;--bg3:#eef0f7;--card:#ffffff;--border:#e2e5ef;
+    --text:#1b1f2b;--text2:#4b5165;--text3:#7d8399;
+    --accent-shadow:rgba(155,114,203,.3);--green:#1e9e5a;--red:#d64545;
+    --shadow:0 10px 26px -16px rgba(30,35,60,.18);
+  }
+  @media (prefers-color-scheme: light){
+    :root[data-theme="auto"]{
+      --bg:#f6f7fb;--bg2:#ffffff;--bg3:#eef0f7;--card:#ffffff;--border:#e2e5ef;
+      --text:#1b1f2b;--text2:#4b5165;--text3:#7d8399;
+      --accent-shadow:rgba(155,114,203,.3);--green:#1e9e5a;--red:#d64545;
+      --shadow:0 10px 26px -16px rgba(30,35,60,.18);
+    }
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overscroll-behavior-y:contain}
   body{padding-top:var(--sat)}
-  .page{display:none;min-height:100vh;padding:14px 14px calc(80px + var(--sab))}
+  .page{display:none;min-height:100vh;padding:18px 16px calc(84px + var(--sab))}
   .page.active{display:block}
   .header{display:flex;align-items:center;width:100%}
-  .header-title{font-size:22px;font-weight:900;letter-spacing:-.01em;margin-bottom:2px}
+  .header-title{font-size:23px;font-weight:900;letter-spacing:-.01em;margin-bottom:4px;background:var(--accent-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
   .header-sub{font-size:13px;color:var(--text3)}
-  .section-title{font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:16px 2px 8px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+  .section-title{font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:22px 2px 10px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
   .input{width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:15px;font-family:inherit}
   select.input{appearance:none;-webkit-appearance:none}
   textarea.input{resize:vertical;min-height:60px}
@@ -259,6 +282,12 @@
 <div class="page" id="page-mas">
   <div class="header-title">☰ Más</div>
   <div style="height:12px"></div>
+
+  <div class="section-title">Apariencia</div>
+  <div class="card">
+    <div class="field-label">Color de la app</div>
+    <div class="pill-sel" id="tema-pills"></div>
+  </div>
 
   <div class="section-title">Categorías</div>
   <div class="card" style="padding:6px 4px" id="mas-categorias-card"></div>
@@ -981,7 +1010,24 @@ function borrarCategoria(id){
   renderMas();
   rerenderPaginaActual();
 }
+const TEMAS=[['auto','🌗 Automático'],['light','☀️ Claro'],['dark','🌙 Oscuro']];
+function aplicarTema(tema){
+  document.documentElement.setAttribute('data-theme', tema);
+  try{ localStorage.setItem('agenda_tema', tema); }catch(e){}
+  const esClaro = tema==='light' || (tema==='auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.content = esClaro ? '#f6f7fb' : '#131316';
+}
+function renderTemaPills(){
+  const el=document.getElementById('tema-pills');
+  if(!el) return;
+  const actual=document.documentElement.getAttribute('data-theme')||'auto';
+  el.innerHTML=TEMAS.map(([id,label])=>
+    '<button type="button" class="pill '+(id===actual?'sel':'')+'" onclick="aplicarTema(\''+id+'\');renderTemaPills()">'+label+'</button>'
+  ).join('');
+}
 function renderMas(){
+  renderTemaPills();
   document.getElementById('mas-categorias-card').innerHTML=DB.categorias.map(c=>
     '<div class="cat-row"><div class="cat-dot" style="background:'+c.color+'"></div><div class="cat-nombre">'+esc(c.nombre)+'</div>'
     + '<button class="btn-icon" style="width:28px;height:28px;font-size:12px" onclick="borrarCategoria(\''+c.id+'\')">✕</button></div>'
@@ -1217,6 +1263,7 @@ if('serviceWorker' in navigator){
 // INIT
 // ═══════════════════════════════════════════════════════════════
 function iniciarApp(){
+  aplicarTema(document.documentElement.getAttribute('data-theme')||'auto');
   cargarDB();
   calInit();
   document.getElementById('navbar').style.display='';
@@ -1225,6 +1272,10 @@ function iniciarApp(){
   checkRecordatorios();
   setInterval(checkRecordatorios, 30000);
   document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkRecordatorios(); });
+  if(window.matchMedia) window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', ()=>{
+    const t=document.documentElement.getAttribute('data-theme')||'auto';
+    if(t==='auto') aplicarTema('auto');
+  });
 }
 iniciarApp();
 </script>
