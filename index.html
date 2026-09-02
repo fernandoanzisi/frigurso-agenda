@@ -9,16 +9,15 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script>
-// Se aplica ANTES del CSS para que no haya flash del tema/letra equivocados al abrir.
+// Se aplica ANTES del CSS para que no haya flash de preferencias equivocadas al abrir.
 (function(){
   const html=document.documentElement;
-  try{
-    html.setAttribute('data-theme', localStorage.getItem('agenda_tema')||'auto');
-    html.setAttribute('data-size', localStorage.getItem('agenda_tamano')||'normal');
-    html.setAttribute('data-font', localStorage.getItem('agenda_fuente')||'sistema');
-  }catch(e){
-    html.setAttribute('data-theme','auto'); html.setAttribute('data-size','normal'); html.setAttribute('data-font','sistema');
-  }
+  const PREFS=[['data-theme','agenda_tema','auto'],['data-size','agenda_tamano','normal'],['data-font','agenda_fuente','sistema'],['data-accent','agenda_acento','gemini'],['data-density','agenda_densidad','comoda'],['data-contraste','agenda_contraste','normal']];
+  PREFS.forEach(([attr,key,def])=>{
+    let v=def;
+    try{ v=localStorage.getItem(key)||def; }catch(e){}
+    html.setAttribute(attr, v);
+  });
 })();
 </script>
 <style>
@@ -31,6 +30,8 @@
     --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     --shadow:0 10px 26px -14px rgba(0,0,0,.5);
     --sab:env(safe-area-inset-bottom,0px);--sat:env(safe-area-inset-top,0px);
+    /* Densidad: cómoda por defecto */
+    --pad-page:18px 16px;--pad-card:16px 18px;--mb-card:12px;--mt-section:22px 2px 10px;--row-pad:9px 4px;--row-gap:9px;
   }
   html[data-size="chica"]{font-size:14px}
   html[data-size="normal"]{font-size:16px}
@@ -39,6 +40,18 @@
   html[data-font="redondeada"]{--font:ui-rounded,'SF Pro Rounded','Segoe UI',Roboto,sans-serif}
   html[data-font="serif"]{--font:Georgia,'Times New Roman',serif}
   html[data-font="mono"]{--font:var(--mono)}
+  html[data-density="compacta"]{
+    --pad-page:12px 12px;--pad-card:12px 14px;--mb-card:8px;--mt-section:14px 2px 6px;--row-pad:6px 4px;--row-gap:7px;
+  }
+  html[data-accent="oceano"]{--accent:#0ea5e9;--accent-grad:linear-gradient(135deg,#0891b2 0%,#0ea5e9 55%,#22d3ee 100%);--accent-shadow:rgba(14,165,233,.4)}
+  html[data-accent="atardecer"]{--accent:#f97316;--accent-grad:linear-gradient(135deg,#f59e0b 0%,#f97316 55%,#ec4899 100%);--accent-shadow:rgba(249,115,22,.4)}
+  html[data-accent="bosque"]{--accent:#22c55e;--accent-grad:linear-gradient(135deg,#16a34a 0%,#22c55e 55%,#84cc16 100%);--accent-shadow:rgba(34,197,94,.4)}
+  html[data-contraste="alto"]{
+    --border:color-mix(in srgb, var(--border) 35%, var(--text) 65%);
+    --text3:color-mix(in srgb, var(--text3) 25%, var(--text) 75%);
+  }
+  html[data-contraste="alto"] .card,html[data-contraste="alto"] .input,html[data-contraste="alto"] .pill,html[data-contraste="alto"] .btn-icon,html[data-contraste="alto"] .row-check{border-width:1.5px}
+  html[data-contraste="alto"] .row-item{border-bottom-width:1.5px}
   :root[data-theme="light"]{
     /* Gemini claro */
     --bg:#f6f7fb;--bg2:#ffffff;--bg3:#eef0f7;--card:#ffffff;--border:#e2e5ef;
@@ -58,13 +71,13 @@
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--font);overscroll-behavior-y:contain}
   body{padding-top:var(--sat)}
-  .page{display:none;min-height:100vh;padding:18px 16px calc(84px + var(--sab))}
+  .page{display:none;min-height:100vh;padding:var(--pad-page) calc(84px + var(--sab))}
   .page.active{display:block}
   .header{display:flex;align-items:center;width:100%}
   .header-title{font-size:1.4375rem;font-weight:900;letter-spacing:-.01em;margin-bottom:4px;background:var(--accent-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
   .header-sub{font-size:0.8125rem;color:var(--text3)}
-  .section-title{font-size:0.75rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:22px 2px 10px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .section-title{font-size:0.75rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:var(--mt-section)}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:var(--pad-card);margin-bottom:var(--mb-card);box-shadow:var(--shadow)}
   .input{width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:0.9375rem;font-family:inherit}
   select.input{appearance:none;-webkit-appearance:none}
   textarea.input{resize:vertical;min-height:60px}
@@ -74,7 +87,7 @@
   .btn-danger{width:100%;padding:13px;border-radius:14px;background:rgba(246,106,106,.12);color:var(--red);font-size:0.875rem;font-weight:700;border:1px solid rgba(246,106,106,.3);margin-bottom:8px}
   .btn-ghost{width:100%;padding:12px;border-radius:14px;background:transparent;color:var(--text3);font-size:0.8125rem;font-weight:600;border:none}
   .btn-icon{width:34px;height:34px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:0.9375rem;flex-shrink:0}
-  .row-item{display:flex;align-items:center;gap:9px;padding:9px 4px;border-bottom:1px solid var(--border);cursor:pointer}
+  .row-item{display:flex;align-items:center;gap:var(--row-gap);padding:var(--row-pad);border-bottom:1px solid var(--border);cursor:pointer}
   .row-item:last-child{border-bottom:none}
   .row-title{font-size:0.875rem;font-weight:700}
   .row-sub{font-size:0.75rem;color:var(--text3);margin-top:1px}
@@ -302,10 +315,24 @@
   <div class="card">
     <div class="field-label">Color de la app</div>
     <div class="pill-sel" id="tema-pills" style="margin-bottom:14px"></div>
+    <div class="field-label">Acento</div>
+    <div class="pill-sel" id="acento-pills" style="margin-bottom:14px"></div>
     <div class="field-label">Tamaño de letra</div>
     <div class="pill-sel" id="tamano-pills" style="margin-bottom:14px"></div>
     <div class="field-label">Tipo de letra</div>
-    <div class="pill-sel" id="fuente-pills"></div>
+    <div class="pill-sel" id="fuente-pills" style="margin-bottom:14px"></div>
+    <div class="field-label">Densidad</div>
+    <div class="pill-sel" id="densidad-pills" style="margin-bottom:14px"></div>
+    <div class="field-label">Alto contraste</div>
+    <div class="pill-sel" id="contraste-pills"></div>
+  </div>
+
+  <div class="section-title">Agenda</div>
+  <div class="card">
+    <div class="field-label">Formato de hora</div>
+    <div class="pill-sel" id="horaformato-pills" style="margin-bottom:14px"></div>
+    <div class="field-label">La semana empieza en</div>
+    <div class="pill-sel" id="semana-pills"></div>
   </div>
 
   <div class="section-title">Categorías</div>
@@ -465,6 +492,18 @@ function sumarDias(fechaStr,n){ const d=new Date(fechaStr+'T00:00:00'); d.setDat
 function sumarMes(d,n){ const nd=new Date(d); const day=nd.getDate(); nd.setDate(1); nd.setMonth(nd.getMonth()+n); const ultimoDia=new Date(nd.getFullYear(),nd.getMonth()+1,0).getDate(); nd.setDate(Math.min(day,ultimoDia)); return nd; }
 function fmtFechaCorta(s){ if(!s) return ''; const [y,m,d]=s.split('-'); const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']; return d+' '+MES[parseInt(m)-1]; }
 function fmtFechaLarga(s){ if(!s) return ''; const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado']; const d=new Date(s+'T00:00:00'); return DIAS[d.getDay()]+' '+fmtFechaCorta(s); }
+function fmtHora(hora){
+  if(!hora) return '';
+  let formato='24'; try{ formato=localStorage.getItem('agenda_formato_hora')||'24'; }catch(e){}
+  if(formato==='24') return hora;
+  let [hh,mm]=hora.split(':').map(Number);
+  const ampm=hh<12?'am':'pm';
+  let h12=hh%12; if(h12===0) h12=12;
+  return h12+':'+pad(mm)+' '+ampm;
+}
+function inicioSemana(){
+  try{ return localStorage.getItem('agenda_semana')||'lunes'; }catch(e){ return 'lunes'; }
+}
 
 // ═══════════════════════════════════════════════════════════════
 // CATEGORÍAS
@@ -705,7 +744,7 @@ function itemRowHtml(item,fecha){
   const cat=categoriaPorId(item.categoriaId);
   const esTarea=item.tipo==='tarea';
   const hecho=esTarea && estaHecho(item,fecha);
-  const horaTxt=item.tipo==='cumple'?'🎂':(item.hora?item.hora:(esTarea?'':'·'));
+  const horaTxt=item.tipo==='cumple'?'🎂':(item.hora?fmtHora(item.hora):(esTarea?'':'·'));
   const checkBtn=esTarea
     ? '<button class="row-check'+(hecho?' done':'')+'" onclick="event.stopPropagation();toggleHecho(\''+item.id+'\',\''+fecha+'\')">✓</button>'
     : '';
@@ -819,15 +858,17 @@ function calMoverMes(delta){
   renderCalendario();
 }
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const DIAS_CORTOS=['L','M','M','J','V','S','D'];
+const DIAS_CORTOS_LUN=['L','M','M','J','V','S','D'];
+const DIAS_CORTOS_DOM=['D','L','M','M','J','V','S'];
 function renderCalendario(){
   document.getElementById('cal-filtro').innerHTML=filtroCategoriasHtml();
   document.getElementById('cal-mes-lbl').textContent=MESES[_calMonth]+' '+_calYear;
+  const domingoFirst=inicioSemana()==='domingo';
   const primero=new Date(_calYear,_calMonth,1);
   const diasEnMes=new Date(_calYear,_calMonth+1,0).getDate();
-  const offset=(primero.getDay()+6)%7; // lunes-first
+  const offset=domingoFirst ? primero.getDay() : (primero.getDay()+6)%7;
   const hoy=fechaHoy();
-  let html=DIAS_CORTOS.map(d=>'<div class="cal-wd">'+d+'</div>').join('');
+  let html=(domingoFirst?DIAS_CORTOS_DOM:DIAS_CORTOS_LUN).map(d=>'<div class="cal-wd">'+d+'</div>').join('');
   for(let i=0;i<offset;i++) html+='<div class="cal-day blank"></div>';
   for(let d=1;d<=diasEnMes;d++){
     const fecha=`${_calYear}-${pad(_calMonth+1)}-${pad(d)}`;
@@ -1071,8 +1112,74 @@ function renderFuentePills(){
     '<button type="button" class="pill '+(id===actual?'sel':'')+'" onclick="aplicarFuente(\''+id+'\');renderFuentePills()" style="font-family:'+(id==='redondeada'?"ui-rounded,'SF Pro Rounded',sans-serif":id==='serif'?"Georgia,'Times New Roman',serif":id==='mono'?'var(--mono)':'inherit')+'">'+label+'</button>'
   ).join('');
 }
+const ACENTOS=[['gemini','Gemini'],['oceano','Océano'],['atardecer','Atardecer'],['bosque','Bosque']];
+function aplicarAcento(a){
+  document.documentElement.setAttribute('data-accent', a);
+  try{ localStorage.setItem('agenda_acento', a); }catch(e){}
+}
+function renderAcentoPills(){
+  const el=document.getElementById('acento-pills');
+  if(!el) return;
+  const actual=document.documentElement.getAttribute('data-accent')||'gemini';
+  const GRADS={gemini:'linear-gradient(135deg,#4285f4,#9b72cb,#e8618c)',oceano:'linear-gradient(135deg,#0891b2,#0ea5e9,#22d3ee)',atardecer:'linear-gradient(135deg,#f59e0b,#f97316,#ec4899)',bosque:'linear-gradient(135deg,#16a34a,#22c55e,#84cc16)'};
+  el.innerHTML=ACENTOS.map(([id,label])=>
+    '<button type="button" class="pill '+(id===actual?'sel':'')+'" onclick="aplicarAcento(\''+id+'\');renderAcentoPills()" style="'+(id===actual?('background:'+GRADS[id]+';color:#fff;border-color:transparent'):'')+'"><span style="width:9px;height:9px;border-radius:50%;background:'+GRADS[id]+';display:inline-block"></span>'+label+'</button>'
+  ).join('');
+}
+const DENSIDADES=[['comoda','Cómoda'],['compacta','Compacta']];
+function aplicarDensidad(d){
+  document.documentElement.setAttribute('data-density', d);
+  try{ localStorage.setItem('agenda_densidad', d); }catch(e){}
+}
+function renderDensidadPills(){
+  const el=document.getElementById('densidad-pills');
+  if(!el) return;
+  const actual=document.documentElement.getAttribute('data-density')||'comoda';
+  el.innerHTML=DENSIDADES.map(([id,label])=>
+    '<button type="button" class="pill '+(id===actual?'sel':'')+'" onclick="aplicarDensidad(\''+id+'\');renderDensidadPills()">'+label+'</button>'
+  ).join('');
+}
+const CONTRASTES=[['normal','No'],['alto','Sí']];
+function aplicarContraste(c){
+  document.documentElement.setAttribute('data-contraste', c);
+  try{ localStorage.setItem('agenda_contraste', c); }catch(e){}
+}
+function renderContrastePills(){
+  const el=document.getElementById('contraste-pills');
+  if(!el) return;
+  const actual=document.documentElement.getAttribute('data-contraste')||'normal';
+  el.innerHTML=CONTRASTES.map(([id,label])=>
+    '<button type="button" class="pill '+(id===actual?'sel':'')+'" onclick="aplicarContraste(\''+id+'\');renderContrastePills()">'+label+'</button>'
+  ).join('');
+}
+const HORAFORMATOS=[['24','24 hs (15:30)'],['12','12 hs (3:30 pm)']];
+function aplicarFormatoHora(f){
+  try{ localStorage.setItem('agenda_formato_hora', f); }catch(e){}
+  renderHoraformatoPills(); rerenderPaginaActual();
+}
+function renderHoraformatoPills(){
+  const el=document.getElementById('horaformato-pills');
+  if(!el) return;
+  let actual='24'; try{ actual=localStorage.getItem('agenda_formato_hora')||'24'; }catch(e){}
+  el.innerHTML=HORAFORMATOS.map(([id,label])=>
+    '<button type="button" class="pill '+(id===actual?'sel':'')+'" onclick="aplicarFormatoHora(\''+id+'\')">'+label+'</button>'
+  ).join('');
+}
+const SEMANAS=[['lunes','Lunes'],['domingo','Domingo']];
+function aplicarSemana(s){
+  try{ localStorage.setItem('agenda_semana', s); }catch(e){}
+  renderSemanaPills(); rerenderPaginaActual();
+}
+function renderSemanaPills(){
+  const el=document.getElementById('semana-pills');
+  if(!el) return;
+  const actual=inicioSemana();
+  el.innerHTML=SEMANAS.map(([id,label])=>
+    '<button type="button" class="pill '+(id===actual?'sel':'')+'" onclick="aplicarSemana(\''+id+'\')">'+label+'</button>'
+  ).join('');
+}
 function renderMas(){
-  renderTemaPills(); renderTamanoPills(); renderFuentePills();
+  renderTemaPills(); renderTamanoPills(); renderFuentePills(); renderAcentoPills(); renderDensidadPills(); renderContrastePills(); renderHoraformatoPills(); renderSemanaPills();
   document.getElementById('mas-categorias-card').innerHTML=DB.categorias.map(c=>
     '<div class="cat-row"><div class="cat-dot" style="background:'+c.color+'"></div><div class="cat-nombre">'+esc(c.nombre)+'</div>'
     + '<button class="btn-icon" style="width:28px;height:28px;font-size:0.75rem" onclick="borrarCategoria(\''+c.id+'\')">✕</button></div>'
@@ -1153,7 +1260,7 @@ function exportarICSTodo(){
 // ═══════════════════════════════════════════════════════════════
 function mensajeRecordatorioWhatsapp(item){
   const cat=categoriaPorId(item.categoriaId);
-  const cuando=fmtFechaLarga(item.fecha)+(item.hora?(' a las '+item.hora):'');
+  const cuando=fmtFechaLarga(item.fecha)+(item.hora?(' a las '+fmtHora(item.hora)):'');
   let txt='🔔 Recordatorio de Frigurso Agenda:\n*'+item.titulo+'*\n📅 '+cuando+'\n🏷️ '+cat.nombre;
   if(item.notas) txt+='\n📝 '+item.notas;
   return txt;
@@ -1218,7 +1325,7 @@ function probarRecordatorio(){ dispararRecordatorio({id:'test',titulo:'Recordato
 let _bannerActivo=null;
 function dispararRecordatorio(item, fecha, esPrueba){
   beep();
-  const cuerpo=item.titulo+(item.hora?(' · '+item.hora):'');
+  const cuerpo=item.titulo+(item.hora?(' · '+fmtHora(item.hora)):'');
   if(!esPrueba) toast('🔔 '+item.titulo);
   if('Notification' in window && Notification.permission==='granted' && navigator.serviceWorker){
     navigator.serviceWorker.ready.then(reg=>{
@@ -1231,7 +1338,7 @@ function dispararRecordatorio(item, fecha, esPrueba){
   if(!esPrueba){
     _bannerActivo={id:item.id,fecha};
     document.getElementById('br-titulo').textContent='🔔 '+item.titulo;
-    document.getElementById('br-sub').textContent=item.hora?('Hoy · '+item.hora):'Hoy';
+    document.getElementById('br-sub').textContent=item.hora?('Hoy · '+fmtHora(item.hora)):'Hoy';
     document.getElementById('banner-record').classList.add('show');
   }
 }
