@@ -4,8 +4,8 @@
   "description": "Agenda personal: eventos, tareas, cumpleaños y recordatorios con sonido y aviso escrito",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#0a1120",
-  "theme_color": "#0a1120",
+  "background_color": "#151d33",
+  "theme_color": "#151d33",
   "orientation": "any",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
