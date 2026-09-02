@@ -36,10 +36,16 @@
   .btn-danger{width:100%;padding:13px;border-radius:14px;background:rgba(246,106,106,.12);color:var(--red);font-size:14px;font-weight:700;border:1px solid rgba(246,106,106,.3);margin-bottom:8px}
   .btn-ghost{width:100%;padding:12px;border-radius:14px;background:transparent;color:var(--text3);font-size:13px;font-weight:600;border:none}
   .btn-icon{width:34px;height:34px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-  .row-item{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--border);cursor:pointer}
+  .row-item{display:flex;align-items:center;gap:9px;padding:9px 4px;border-bottom:1px solid var(--border);cursor:pointer}
   .row-item:last-child{border-bottom:none}
   .row-title{font-size:14px;font-weight:700}
   .row-sub{font-size:12px;color:var(--text3);margin-top:1px}
+  .row-stripe{width:4px;align-self:stretch;border-radius:3px;flex-shrink:0}
+  .row-check{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg3);color:transparent;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;padding:0}
+  .row-check.done{background:rgba(61,220,132,.18);border-color:rgba(61,220,132,.45);color:var(--green)}
+  .row-time{font-family:var(--mono);font-size:11.5px;font-weight:800;color:var(--text2);width:38px;flex-shrink:0;text-align:left;line-height:1.1}
+  .row-title2{font-size:14px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row-cat{font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0;max-width:76px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
   .pill{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:99px;font-size:13px;font-weight:700;border:1px solid var(--border);background:var(--bg3);color:var(--text2)}
   .pill.sel{background:var(--accent-grad);color:var(--accent-ink);border-color:var(--accent)}
   .pill-sel{display:flex;flex-wrap:wrap;gap:8px}
@@ -316,6 +322,8 @@
   <div class="modal">
     <div class="modal-title" id="mod-title">+ Nuevo</div>
     <input type="hidden" id="mod-id">
+
+    <div id="mod-hecho-wrap" style="display:none;margin-bottom:14px"></div>
 
     <div class="field-wrap">
       <div class="field-label">Tipo</div>
@@ -649,17 +657,17 @@ function itemRowHtml(item,fecha){
   const cat=categoriaPorId(item.categoriaId);
   const esTarea=item.tipo==='tarea';
   const hecho=esTarea && estaHecho(item,fecha);
-  const iconoTipo=item.tipo==='cumple'?'🎂':(item.tipo==='tarea'?'✓':'📅');
+  const horaTxt=item.tipo==='cumple'?'🎂':(item.hora?item.hora:(esTarea?'':'·'));
   const checkBtn=esTarea
-    ? '<button class="btn-icon" onclick="event.stopPropagation();toggleHecho(\''+item.id+'\',\''+fecha+'\')" style="'+(hecho?'background:rgba(61,220,132,.18);color:var(--green);border-color:rgba(61,220,132,.4)':'')+'">'+(hecho?'✅':'⬜')+'</button>'
-    : '<div class="btn-icon" style="background:'+cat.color+'22;color:'+cat.color+'">'+iconoTipo+'</div>';
-  const subPartes=[cat.nombre];
-  if(item.tipo!=='cumple') subPartes.push(item.hora?item.hora:'Todo el día'); else subPartes.push('🎂');
-  if(item.recurrencia!=='ninguna') subPartes.push('🔁');
+    ? '<button class="row-check'+(hecho?' done':'')+'" onclick="event.stopPropagation();toggleHecho(\''+item.id+'\',\''+fecha+'\')">✓</button>'
+    : '';
+  const catTxt=cat.nombre+(item.recurrencia!=='ninguna'?' 🔁':'')+(item.avisoMin!=null?' 🔔':'');
   return '<div class="row-item" onclick="abrirModalItem(\''+item.id+'\',\''+fecha+'\')">'
+    + '<span class="row-stripe" style="background:'+cat.color+'"></span>'
     + checkBtn
-    + '<div style="flex:1;min-width:0"><div class="row-title" style="'+(hecho?'text-decoration:line-through;color:var(--text3)':'')+'">'+(item.prioridad==='alta'?'🔴 ':'')+esc(item.titulo)+'</div>'
-    + '<div class="row-sub">'+subPartes.join(' · ')+'</div></div>'
+    + '<span class="row-time">'+horaTxt+'</span>'
+    + '<span class="row-title2" style="'+(hecho?'text-decoration:line-through;color:var(--text3)':'')+'">'+(item.prioridad==='alta'?'🔴 ':'')+esc(item.titulo)+'</span>'
+    + '<span class="row-cat">'+esc(catTxt)+'</span>'
     + '</div>';
 }
 function ordenarPorHora(lista){
@@ -807,7 +815,25 @@ function renderBuscar(){
 // ═══════════════════════════════════════════════════════════════
 // MODAL NUEVO/EDITAR ITEM
 // ═══════════════════════════════════════════════════════════════
-let _editId=null, _modTipo='evento', _modCategoriaId=null, _modPrioridad='normal', _modRecurrencia='ninguna', _modChecklist=[];
+let _editId=null, _editFecha=null, _modTipo='evento', _modCategoriaId=null, _modPrioridad='normal', _modRecurrencia='ninguna', _modChecklist=[];
+function renderModHechoBtn(){
+  const wrap=document.getElementById('mod-hecho-wrap');
+  const item=_editId?DB.items.find(i=>i.id===_editId):null;
+  if(!item || _modTipo!=='tarea' || !_editFecha){ wrap.style.display='none'; wrap.innerHTML=''; return; }
+  const hecho=estaHecho(item,_editFecha);
+  wrap.style.display='';
+  wrap.innerHTML = hecho
+    ? '<button type="button" class="btn-primary" style="background:rgba(61,220,132,.18);color:var(--green);border:1.5px solid rgba(61,220,132,.45)" onclick="toggleModHecho()">✅ Finalizada · tocá para reabrir</button>'
+    : '<button type="button" class="btn-primary" style="background:var(--bg3);color:var(--text2);border:1.5px solid var(--border)" onclick="toggleModHecho()">⬜ Marcar como finalizada</button>';
+}
+function toggleModHecho(){
+  const item=_editId?DB.items.find(i=>i.id===_editId):null;
+  if(!item || !_editFecha) return;
+  marcarHecho(item,_editFecha,!estaHecho(item,_editFecha));
+  save();
+  renderModHechoBtn();
+  rerenderPaginaActual();
+}
 function renderModTipoPills(){
   const tipos=[['evento','📅 Evento'],['tarea','✓ Tarea'],['cumple','🎂 Cumpleaños']];
   document.getElementById('mod-tipo-pills').innerHTML=tipos.map(([id,label])=>
@@ -817,7 +843,7 @@ function renderModTipoPills(){
 function setModTipo(tipo){
   _modTipo=tipo;
   if(tipo==='cumple'){ _modRecurrencia='anual'; document.getElementById('mod-todo-dia').checked=true; }
-  renderModTipoPills(); renderModRecurPills(); toggleModHora();
+  renderModTipoPills(); renderModRecurPills(); toggleModHora(); renderModHechoBtn();
   document.getElementById('mod-recur-wrap').style.display = tipo==='cumple' ? 'none' : '';
   document.getElementById('mod-recur-cumple-nota').style.display = tipo==='cumple' ? '' : 'none';
 }
@@ -866,6 +892,7 @@ function quitarModChecklistItem(id){ _modChecklist=_modChecklist.filter(x=>x.id!
 function abrirModalItem(id, fechaDefault){
   const item=id?DB.items.find(i=>i.id===id):null;
   _editId=item?item.id:null;
+  _editFecha=item?(fechaDefault||item.fecha):null;
   _modTipo=item?item.tipo:'evento';
   _modCategoriaId=item?item.categoriaId:DB.categorias[0].id;
   _modPrioridad=item?item.prioridad:'normal';
@@ -882,7 +909,7 @@ function abrirModalItem(id, fechaDefault){
   document.getElementById('btn-borrar-item').style.display=item?'':'none';
   document.getElementById('mod-share-wrap').style.display=item?'':'none';
 
-  renderModTipoPills(); renderModRecurPills(); renderModCategoriaPills(); renderModPrioridadPills(); renderModChecklistList();
+  renderModTipoPills(); renderModRecurPills(); renderModCategoriaPills(); renderModPrioridadPills(); renderModChecklistList(); renderModHechoBtn();
   document.getElementById('mod-recur-wrap').style.display = _modTipo==='cumple' ? 'none' : '';
   document.getElementById('mod-recur-cumple-nota').style.display = _modTipo==='cumple' ? '' : 'none';
   toggleModHora();
